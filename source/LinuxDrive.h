@@ -12,6 +12,7 @@ namespace Jde::IO::Drive
 	{
 		//void Recursive2( const fs::path& dir )noexcept(false);
 		map<string,IDirEntryPtr> Recursive( const fs::path& dir )noexcept(false) override;
+		IDirEntryPtr Get( const fs::path& path )noexcept(false) override;
 		IDirEntryPtr Save( const fs::path& path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false) override;
 		IDirEntryPtr CreateFolder( const fs::path& path, const IDirEntry& dirEntry )noexcept(false) override;
 		void Trash( const fs::path& path )noexcept override;

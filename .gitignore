@@ -30,3 +30,5 @@
 *.exe
 *.out
 *.app
+source/LinuxTimeZone.h
+source/LinuxTimeZone.cpp

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "LinuxDrive.h"
 #include "../../Framework/source/io/File.h"
 
@@ -28,7 +27,7 @@ namespace Drive
 		DirEntry( const fs::path& path ):
 			DirEntry( fs::directory_entry(path) )
 		{
-			LoadNativeDrive();//TODO Remove
+			//LoadNativeDrive();//TODO Remove
 		}
 		DirEntry( const fs::directory_entry& entry )
 		{
@@ -43,7 +42,11 @@ namespace Drive
 			AccessedTime = accessed;
 		}
 	};
-
+	IDirEntryPtr NativeDrive::Get( const fs::path& path )noexcept(false)
+	{
+		sp<const IDirEntry> pEntry = make_shared<const DirEntry>( path );
+		return pEntry;
+	}
 	map<string,IDirEntryPtr>  NativeDrive::Recursive( const fs::path& dir )noexcept(false)
 	{
 		if( !fs::exists(dir) )
