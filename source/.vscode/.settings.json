@@ -1,0 +1,13 @@
+{
+	"window.title": "Linux",
+	"files.associations": {
+		"array": "cpp",
+		"*.tcc": "cpp",
+		"functional": "cpp",
+		"future": "cpp",
+		"istream": "cpp",
+		"tuple": "cpp",
+		"utility": "cpp",
+		"memory": "cpp"
+	}
+}

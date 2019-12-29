@@ -32,3 +32,4 @@
 *.app
 source/LinuxTimeZone.h
 source/LinuxTimeZone.cpp
+source/.vscode/settings.json
