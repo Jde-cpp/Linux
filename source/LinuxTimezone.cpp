@@ -97,14 +97,4 @@ namespace Jde
 		const Duration value{ pStartDuration->second };
 		return value;
 	}
-	Duration Timezone::TryGetGmtOffset( string_view name, TimePoint utc )noexcept
-	{
-		try
-		{
-			return GetGmtOffset( name, utc );
-		}
-		catch( const Exception& )
-		{}
-		return Duration{};
-	}
 }

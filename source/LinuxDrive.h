@@ -18,5 +18,6 @@ namespace Jde::IO::Drive
 		void Trash( const fs::path& path )noexcept override;
 		VectorPtr<char> Load( const IDirEntry& dirEntry )noexcept(false) override;
 		void Remove( const std::filesystem::__cxx11::path& )noexcept(false) override;
+		void TrashDisposal( TimePoint /*latestDate*/ )noexcept(false)override{ THROW(Exception("Not Implemented")); };
 	};
 }
