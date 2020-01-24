@@ -17,7 +17,7 @@ namespace Drive
 		struct stat attrib;
 		stat( path.string().c_str(), &attrib );
 		var size = attrib.st_size;
-		
+
 		var modifiedTime = Clock::from_time_t( attrib.st_mtim.tv_sec )+std::chrono::nanoseconds( attrib.st_mtim.tv_nsec );
 		var accessedTime = Clock::from_time_t( attrib.st_atim.tv_sec )+std::chrono::nanoseconds( attrib.st_atim.tv_nsec );
 		return make_tuple( modifiedTime,accessedTime, size );
@@ -89,7 +89,7 @@ namespace Drive
 			var accessedTime = dirEntry.AccessedTime.time_since_epoch()==Duration::zero() ? modifiedTime : to_timespec( dirEntry.AccessedTime );
 			timespec values[] = {accessedTime, modifiedTime};
 			if( !utimensat(AT_FDCWD, dir.string().c_str(), values, 0) )
-				WARN( "utimensat returned {} on {}", errno, dir.string() );
+				WARN( "utimensat returned {} on {}"sv, errno, dir.string() );
 		}
 		return make_shared<DirEntry>( dir );
 	}
@@ -102,11 +102,11 @@ namespace Drive
 			var accessedTime = dirEntry.AccessedTime.time_since_epoch()==Duration::zero() ? modifiedTime : to_timespec( dirEntry.AccessedTime );
 			timespec values[] = {accessedTime, modifiedTime};
 			if( !utimensat(AT_FDCWD, path.string().c_str(), values, 0) )
-				WARN( "utimensat returned {} on {}", errno, path.string() );
+				WARN( "utimensat returned {} on {}"sv, errno, path.string() );
 		}
 		return make_shared<DirEntry>( path );
 	}
-	
+
 	//VectorPtr<char> NativeDrive::Load( const fs::path& path )noexcept(false)
 	VectorPtr<char> NativeDrive::Load( const IDirEntry& dirEntry )noexcept(false)//fs::filesystem_error, IOException
 	{
@@ -115,14 +115,14 @@ namespace Drive
 
 	void NativeDrive::Remove( const fs::path& path )noexcept(false)
 	{
-		DBG( "Removing '{}'.", path.string() );
+		DBG( "Removing '{}'."sv, path.string() );
 		fs::remove( path );
 	}
 	void NativeDrive::Trash( const fs::path& path )noexcept
 	{
-		DBG( "Trashing '{}'.", path.string() );
-		
+		DBG( "Trashing '{}'."sv, path.string() );
+
 		var result = system( fmt::format("gio trash {}", path.string()).c_str() );
-		DBG( "Trashing '{}' returned '{}'.", path.string(), result );
+		DBG( "Trashing '{}' returned '{}'."sv, path.string(), result );
 	}
 }}
