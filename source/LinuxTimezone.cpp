@@ -30,6 +30,8 @@ namespace Jde
 	typedef map<TimePoint,Duration, std::greater<TimePoint>> CacheType;
 	sp<CacheType> LoadGmtOffset( string_view name )noexcept(false)
 	{
+		if( name=="EST (Eastern Standard Time)" )
+			name = "EST5EDT";
 		const fs::path path{ fs::path{"/usr/share/zoneinfo"}/fs::path{name} };
 		if( !fs::exists(path) )
 			THROW( IOException("Could not open '{}'", path.string()) );
