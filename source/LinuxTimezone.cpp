@@ -89,7 +89,7 @@ namespace Jde
 	Duration Timezone::GetGmtOffset( string_view name, TimePoint utc )noexcept(false)
 	{
 		var key = fmt::format( "GetGmtOffset-{}", name );
-		auto pInfo = Cache::Get<CacheType>( key );
+		auto pInfo = Cache::TryGet<CacheType>( key );
 		if( !pInfo || !pInfo->size() )
 			Cache::Set<CacheType>( key, pInfo = LoadGmtOffset( name ) );
 		var pStartDuration = pInfo->lower_bound( utc );
