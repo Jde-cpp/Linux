@@ -95,7 +95,7 @@ namespace Jde
 		var pStartDuration = pInfo->lower_bound( utc );
 		if( pStartDuration==pInfo->end() )
 			THROW( Exception( "No info for '{}'", ToIsoString(utc) ) );
-		TimePoint date{ pStartDuration->first };
+		//TimePoint date{ pStartDuration->first };
 		const Duration value{ pStartDuration->second };
 		return value;
 	}

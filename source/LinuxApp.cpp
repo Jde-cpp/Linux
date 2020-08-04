@@ -26,10 +26,10 @@ namespace Jde
 			osLevel = LOG_CRIT;
 		syslog( osLevel, "%s",  value.c_str() );
 	}
-	void OSApp::Startup( int argc, char** argv, string_view appName )noexcept
+	set<string> OSApp::Startup( int argc, char** argv, string_view appName )noexcept
 	{
 		IApplication::_pInstance = make_shared<OSApp>();
-		IApplication::_pInstance->BaseStartup( argc, argv, appName );
+		return IApplication::_pInstance->BaseStartup( argc, argv, appName );
 	}
 
 	void OSApp::OSPause()noexcept

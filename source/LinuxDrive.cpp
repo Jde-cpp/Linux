@@ -18,8 +18,8 @@ namespace Drive
 		stat( path.string().c_str(), &attrib );
 		var size = attrib.st_size;
 
-		var modifiedTime = Clock::from_time_t( attrib.st_mtim.tv_sec )+std::chrono::nanoseconds( attrib.st_mtim.tv_nsec );
-		var accessedTime = Clock::from_time_t( attrib.st_atim.tv_sec )+std::chrono::nanoseconds( attrib.st_atim.tv_nsec );
+		const TimePoint modifiedTime = Clock::from_time_t( attrib.st_mtim.tv_sec );//+std::chrono::nanoseconds( attrib.st_mtim.tv_nsec );TODO
+		const TimePoint accessedTime = Clock::from_time_t( attrib.st_atim.tv_sec );//+std::chrono::nanoseconds( attrib.st_atim.tv_nsec );
 		return make_tuple( modifiedTime,accessedTime, size );
 	}
 	struct DirEntry : IDirEntry
@@ -55,7 +55,7 @@ namespace Drive
 		map<string,IDirEntryPtr> entries;
 
 		std::function<void(const fs::directory_entry&)> fnctn;
-		fnctn = [&dir, &dirString, &entries, &fnctn]( const fs::directory_entry& entry )
+		fnctn = [&dirString, &entries, &fnctn]( const fs::directory_entry& entry )
 		{
 			var status = entry.status();
 			var relativeDir = entry.path().string().substr( dirString.size()+1 );
