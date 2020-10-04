@@ -32,6 +32,8 @@ namespace Jde
 	{
 		if( name=="EST (Eastern Standard Time)" )
 			name = "EST5EDT";
+		else if( name=="MET (Middle Europe Time)" )
+			name = "MET";
 		const fs::path path{ fs::path{"/usr/share/zoneinfo"}/fs::path{name} };
 		if( !fs::exists(path) )
 			THROW( IOException("Could not open '{}'", path.string()) );

@@ -26,7 +26,7 @@ namespace Jde
 			osLevel = LOG_CRIT;
 		syslog( osLevel, "%s",  value.c_str() );
 	}
-	set<string> OSApp::Startup( int argc, char** argv, string_view appName )noexcept
+	set<string> OSApp::Startup( int argc, char** argv, string_view appName )noexcept(false)
 	{
 		IApplication::_pInstance = make_shared<OSApp>();
 		return IApplication::_pInstance->BaseStartup( argc, argv, appName );
@@ -58,6 +58,16 @@ namespace Jde
 		IApplication::AddApplicationLog( ELogLevel::Critical, os.str() );
 		free( stack_syms );
 		exit( EXIT_FAILURE );
+	}
+
+	string OSApp::GetEnvironmentVariable( string_view variable )noexcept
+	{
+		return  ::getenv( string{variable}.c_str() );
+
+	}
+	fs::path OSApp::ProgramDataFolder()noexcept
+	{
+		return fs::path{ fs::path{"~"}/format(".{}", ApplicationName()) };
 	}
 
 	void OSApp::ExitHandler( int s )
