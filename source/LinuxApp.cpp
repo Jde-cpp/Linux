@@ -62,12 +62,13 @@ namespace Jde
 
 	string OSApp::GetEnvironmentVariable( string_view variable )noexcept
 	{
-		return  ::getenv( string{variable}.c_str() );
+		char* pEnv = std::getenv( string{variable}.c_str() );
+		return pEnv ? string{pEnv} : string{};
 
 	}
 	fs::path OSApp::ProgramDataFolder()noexcept
 	{
-		return fs::path{ fs::path{"~"}/format(".{}", ApplicationName()) };
+		return fs::path{ GetEnvironmentVariable("HOME"sv) };
 	}
 
 	void OSApp::ExitHandler( int s )
