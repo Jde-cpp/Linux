@@ -24,7 +24,7 @@ namespace Drive
 	}
 	struct DirEntry : IDirEntry
 	{
-		DirEntry( const fs::path& path ):
+		DirEntry( path path ):
 			DirEntry( fs::directory_entry(path) )
 		{
 			//LoadNativeDrive();//TODO Remove
@@ -42,12 +42,12 @@ namespace Drive
 			AccessedTime = accessed;
 		}
 	};
-	IDirEntryPtr NativeDrive::Get( const fs::path& path )noexcept(false)
+	IDirEntryPtr NativeDrive::Get( path path )noexcept(false)
 	{
 		sp<const IDirEntry> pEntry = make_shared<const DirEntry>( path );
 		return pEntry;
 	}
-	map<string,IDirEntryPtr>  NativeDrive::Recursive( const fs::path& dir )noexcept(false)
+	map<string,IDirEntryPtr>  NativeDrive::Recursive( path dir )noexcept(false)
 	{
 		if( !fs::exists(dir) )
 			THROW( IOException( "'{}' does not exist.", dir) );
@@ -79,7 +79,7 @@ namespace Drive
 
 		return { Clock::to_time_t(time), total };
 	}
-	IDirEntryPtr NativeDrive::CreateFolder( const fs::path& dir, const IDirEntry& dirEntry )noexcept(false)
+	IDirEntryPtr NativeDrive::CreateFolder( path dir, const IDirEntry& dirEntry )noexcept(false)
 	{
 		fs::create_directory( dir );
 		if( dirEntry.ModifiedTime.time_since_epoch()!=Duration::zero() )
@@ -93,7 +93,7 @@ namespace Drive
 		}
 		return make_shared<DirEntry>( dir );
 	}
-	IDirEntryPtr NativeDrive::Save( const fs::path& path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false)
+	IDirEntryPtr NativeDrive::Save( path path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false)
 	{
 		IO::FileUtilities::SaveBinary( path, bytes );
 		if( dirEntry.ModifiedTime.time_since_epoch()!=Duration::zero() )
@@ -101,24 +101,24 @@ namespace Drive
 			var modifiedTime = to_timespec( dirEntry.ModifiedTime );
 			var accessedTime = dirEntry.AccessedTime.time_since_epoch()==Duration::zero() ? modifiedTime : to_timespec( dirEntry.AccessedTime );
 			timespec values[] = {accessedTime, modifiedTime};
-			if( !utimensat(AT_FDCWD, path.string().c_str(), values, 0) )
+			if( utimensat(AT_FDCWD, path.string().c_str(), values, 0) )
 				WARN( "utimensat returned {} on {}"sv, errno, path.string() );
 		}
 		return make_shared<DirEntry>( path );
 	}
 
-	//VectorPtr<char> NativeDrive::Load( const fs::path& path )noexcept(false)
+	//VectorPtr<char> NativeDrive::Load( path path )noexcept(false)
 	VectorPtr<char> NativeDrive::Load( const IDirEntry& dirEntry )noexcept(false)//fs::filesystem_error, IOException
 	{
 		return IO::FileUtilities::LoadBinary( dirEntry.Path );
 	}
 
-	void NativeDrive::Remove( const fs::path& path )noexcept(false)
+	void NativeDrive::Remove( path path )noexcept(false)
 	{
 		DBG( "Removing '{}'."sv, path.string() );
 		fs::remove( path );
 	}
-	void NativeDrive::Trash( const fs::path& path )noexcept
+	void NativeDrive::Trash( path path )noexcept
 	{
 		DBG( "Trashing '{}'."sv, path.string() );
 
