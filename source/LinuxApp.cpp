@@ -2,7 +2,7 @@
 #include <syslog.h>
 #include <execinfo.h>
 #include <signal.h>
-
+#include "LinuxDrive.h"
 #include "../../Framework/source/application/Application.h"
 #include "../../Framework/source/threading/InterruptibleThread.h"
 
@@ -115,5 +115,12 @@ namespace Jde
 	{
 		std::cout << "\033]0;" << title << "\007";
 	}
+
+	sp<IO::IDrive> IApplication::DriveApi()noexcept
+	{
+		auto p = make_shared<IO::Drive::NativeDrive>();
+		return p;
+	}
+
 }
 #undef var

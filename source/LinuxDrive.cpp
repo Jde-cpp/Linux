@@ -1,4 +1,5 @@
 #include "LinuxDrive.h"
+#include <unistd.h>
 #include "../../Framework/source/io/File.h"
 
 #define var const auto
@@ -124,5 +125,11 @@ namespace Drive
 
 		var result = system( fmt::format("gio trash {}", path.string()).c_str() );
 		DBG( "Trashing '{}' returned '{}'."sv, path.string(), result );
+	}
+	void NativeDrive::SoftLink( path existingFile, path newSymLink )noexcept(false)
+	{
+		var result = ::symlink( existingFile.string().c_str(), newSymLink.string().c_str() );
+		THROW_IF( result!=0, Exception("symlink creating '{}' referencing '{}' failed ({}){}.", newSymLink.string(), existingFile.string(), result, errno) );
+		DBG( "Created symlink '{}' referencing '{}'."sv, newSymLink.string(), existingFile.string() );
 	}
 }}

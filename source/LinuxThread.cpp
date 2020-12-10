@@ -21,9 +21,9 @@ namespace Jde
 	   pthread_setname_np( thread.native_handle(), string(pszDescription).c_str() );
 	}
 
-	void Threading::SetThreadDscrptn( const std::string& description )noexcept
+	void Threading::SetThreadDscrptn( const string& description )noexcept
 	{
-		strncpy( ThreadName, description.c_str(), NameLength );
+		strncpy( ThreadName, str{description}.c_str(), NameLength );
 		prctl( PR_SET_NAME, ThreadName, 0, 0, 0 );
 		ThreadId = pthread_self();
 	}

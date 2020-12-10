@@ -20,5 +20,6 @@ namespace Jde::IO::Drive
 		void Remove( path )noexcept(false) override;
 		void TrashDisposal( TimePoint /*latestDate*/ )noexcept(false)override{ THROW(Exception("Not Implemented")); };
 		void Restore( sv name )noexcept(false)override{ THROW(Exception("Not Implemented")); };
+		void SoftLink( path existingFile, path newSymLink )noexcept(false) override;
 	};
 }
