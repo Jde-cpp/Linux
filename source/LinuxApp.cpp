@@ -26,6 +26,37 @@ namespace Jde
 			osLevel = LOG_CRIT;
 		syslog( osLevel, "%s",  value.c_str() );
 	}
+
+	size_t IApplication::MemorySize()noexcept//https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
+	{
+		uint size = 0;
+		FILE* fp = fopen( "/proc/self/statm", "r" );
+		if( fp!=nullptr )
+		{
+			long rss = 0L;
+			if( fscanf( fp, "%*s%ld", &rss ) == 1 )
+				size = (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
+			fclose( fp );
+		}
+		return size;
+	}
+	fs::path IApplication::Path()noexcept
+	{
+		return std::filesystem::canonical( "/proc/self/exe" ).parent_path();
+		return fs::path( program_invocation_name );
+	}
+	string IApplication::HostName()noexcept
+	{
+		constexpr uint maxHostName = HOST_NAME_MAX;
+		char hostname[maxHostName];
+		gethostname( hostname, maxHostName );
+		return hostname;
+	}
+	uint IApplication::ProcessId()noexcept
+	{
+		return getpid();
+	}
+
 	set<string> OSApp::Startup( int argc, char** argv, string_view appName )noexcept(false)
 	{
 		IApplication::_pInstance = make_shared<OSApp>();
