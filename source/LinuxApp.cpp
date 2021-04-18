@@ -57,7 +57,7 @@ namespace Jde
 		return getpid();
 	}
 
-	set<string> OSApp::Startup( int argc, char** argv, string_view appName )noexcept(false)
+	set<string> OSApp::Startup( int argc, char** argv, sv appName )noexcept(false)
 	{
 		IApplication::_pInstance = make_shared<OSApp>();
 		return IApplication::_pInstance->BaseStartup( argc, argv, appName );
@@ -91,7 +91,7 @@ namespace Jde
 		exit( EXIT_FAILURE );
 	}
 
-	string OSApp::GetEnvironmentVariable( string_view variable )noexcept
+	string OSApp::GetEnvironmentVariable( sv variable )noexcept
 	{
 		char* pEnv = std::getenv( string{variable}.c_str() );
 		return pEnv ? string{pEnv} : string{};
@@ -142,7 +142,7 @@ namespace Jde
 		//sigaction( SIGTERM, &sigIntHandler, nullptr );
 	}
 
-	void OSApp::SetConsoleTitle( string_view title )noexcept
+	void OSApp::SetConsoleTitle( sv title )noexcept
 	{
 		std::cout << "\033]0;" << title << "\007";
 	}

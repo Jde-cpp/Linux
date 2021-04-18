@@ -14,7 +14,7 @@ namespace Jde
 	// diff = Timezone::EasternTimezoneDifference( DateTime{2020,11,1} ); ASSERT( diff==-4h );
 	// diff = Timezone::EasternTimezoneDifference( DateTime{2020,11,2} ); ASSERT( diff==-5h );
 
-	constexpr string_view Magic = "TZif"sv;
+	constexpr sv Magic = "TZif"sv;
 	struct tzhead
 	{
 		char	tzh_magic[4];		/* TZ_MAGIC */
@@ -28,7 +28,7 @@ namespace Jde
 		char	tzh_charcnt[4];		/* coded number of abbr. chars */
 	};
 	typedef map<TimePoint,Duration, std::greater<TimePoint>> CacheType;
-	sp<CacheType> LoadGmtOffset( string_view name )noexcept(false)
+	sp<CacheType> LoadGmtOffset( sv name )noexcept(false)
 	{
 		if( name=="EST (Eastern Standard Time)" )
 			name = "EST5EDT";
@@ -88,7 +88,7 @@ namespace Jde
 		return TryGetGmtOffset( "EST5EDT", utc );
 	}
 
-	Duration Timezone::GetGmtOffset( string_view name, TimePoint utc )noexcept(false)
+	Duration Timezone::GetGmtOffset( sv name, TimePoint utc )noexcept(false)
 	{
 		var key = fmt::format( "GetGmtOffset-{}", name );
 		auto pInfo = Cache::TryGet<CacheType>( key );
