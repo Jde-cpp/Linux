@@ -3,7 +3,7 @@
 #include <execinfo.h>
 #include <signal.h>
 #include "LinuxDrive.h"
-#include "../../Framework/source/application/Application.h"
+#include <jde/App.h>
 #include "../../Framework/source/threading/InterruptibleThread.h"
 
 
@@ -65,9 +65,9 @@ namespace Jde
 
 	void OSApp::OSPause()noexcept
 	{
-		INFON( "Pausing main thread. {}", getpid() );//[*** LOG ERROR ***] [console] [argument index out of range] [2018-04-20 06:47:33]
+		INFO( "Pausing main thread. {}"sv, getpid() );//[*** LOG ERROR ***] [console] [argument index out of range] [2018-04-20 06:47:33]
 		auto result = ::pause();
-		INFON( "Pause returned - {}.", result );
+		INFO( "Pause returned - {}."sv, result );
 		IApplication::Wait();
 	}
 
@@ -119,9 +119,9 @@ namespace Jde
 	{
 		var result = ::kill( processId, 14 );
 		if( result )
-			ERRN( "kill failed with '{}'.", result );
+			ERR( "kill failed with '{}'."sv, result );
 		else
-			INFON( "kill sent to:  '{}'.", processId );
+			INFO( "kill sent to:  '{}'."sv, processId );
 		return result==0;
 	}
 
