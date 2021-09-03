@@ -11,7 +11,22 @@
 #define var const auto
 namespace Jde
 {
-	void IApplication::AddApplicationLog( ELogLevel level, const string& value )noexcept //called onterminate, needs to be static.
+	void OSApp::Install( str serviceDescription )noexcept(false)
+	{
+		THROW( "Not Implemeented" );
+	}
+
+	void OSApp::Uninstall()noexcept(false)
+	{
+		THROW( "Not Implemeented");
+	}
+
+	fs::path OSApp::Executable()noexcept
+	{
+		return fs::path{ program_invocation_name };
+	}
+
+	void IApplication::AddApplicationLog( ELogLevel level, str value )noexcept //called onterminate, needs to be static.
 	{
 		auto osLevel = LOG_DEBUG;
 		if( level==ELogLevel::Debug )
@@ -40,11 +55,13 @@ namespace Jde
 		}
 		return size;
 	}
+
 	fs::path IApplication::Path()noexcept
 	{
 		return std::filesystem::canonical( "/proc/self/exe" ).parent_path();
 		return fs::path( program_invocation_name );
 	}
+
 	string IApplication::HostName()noexcept
 	{
 		constexpr uint maxHostName = HOST_NAME_MAX;
@@ -52,30 +69,39 @@ namespace Jde
 		gethostname( hostname, maxHostName );
 		return hostname;
 	}
-	uint IApplication::ProcessId()noexcept
+
+	uint OSApp::ProcessId()noexcept
 	{
 		return getpid();
 	}
 
-	set<string> OSApp::Startup( int argc, char** argv, sv appName )noexcept(false)
+	set<string> OSApp::Startup( int argc, char** argv, sv appName, string serviceDescription )noexcept(false)
 	{
 		IApplication::_pInstance = make_shared<OSApp>();
-		return IApplication::_pInstance->BaseStartup( argc, argv, appName );
+		return IApplication::_pInstance->BaseStartup( argc, argv, appName, serviceDescription );
 	}
-
+	atomic<bool> _workerMutex{false};
+	vector<sp<Threading::IWorker>> _workers;
+/*
 	void OSApp::OSPause()noexcept
 	{
-		INFO( "Pausing main thread. {}"sv, getpid() );//[*** LOG ERROR ***] [console] [argument index out of range] [2018-04-20 06:47:33]
+		INFO( "Pausing main thread. {}"sv, getpid() );
 		auto result = ::pause();
+/ *		for( ;; )
+		{
+			break;//not implemented yet.
+			auto pWorker = _activeWorkers.WaitAndPop();
+			if( pWorker->Poll() )
+				AddActiveWorker( pWorker );//make sure doesn't loop forever.
+		}* fas/
 		INFO( "Pause returned - {}."sv, result );
 		IApplication::Wait();
 	}
-
+*/
 	bool OSApp::AsService()noexcept
 	{
 		return ::daemon( 1, 0 )==0;
 	}
-
 
 	void IApplication::OnTerminate()noexcept
 	{
@@ -104,11 +130,9 @@ namespace Jde
 
 	void OSApp::ExitHandler( int s )
 	{
+		ASSERT( false ); //TODO handle
 	//	signal( s, SIG_IGN );
 	//not supposed to log here...
-		lock_guard l{_threadMutex};
-		for( auto& pThread : *_pBackgroundThreads )
-			pThread->Interrupt();
 		//printf( "!!!!!!!!!!!!!!!!!!!!!Caught signal %d!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n",s );
 		//pProcessManager->Stop();
 		//delete pLogger; pLogger = nullptr;
@@ -124,8 +148,27 @@ namespace Jde
 			INFO( "kill sent to:  '{}'."sv, processId );
 		return result==0;
 	}
+	up<flat_map<string,string>> _pArgs;
+	α OSApp::Args()noexcept->flat_map<string,string>
+	{
+		if( !_pArgs )
+		{
+			_pArgs = make_unique<flat_map<string,string>>();
+			std::ifstream file( "/proc/self/cmdline" );
+			auto p = _pArgs->try_emplace( {} );
+			for( string current; std::getline<char>(file, current, '\0'); )
+			{
+				if( current.starts_with('-') )
+					p = _pArgs->try_emplace( current );
+				else
+					p.first->second = current;
+			}
+		}
+		return *_pArgs;
+	}
+	α OSApp::CompanyRootDir()noexcept->fs::path{ return path{ "."+IApplication::CompanyName() }; };
 
-	void OSApp::AddSignals()noexcept(false)/*noexcept(false) for windows*/
+	α OSApp::AddSignals()noexcept(false)->void/*noexcept(false) for windows*/
 	{
 /* 		struct sigaction sigIntHandler;//_XOPEN_SOURCE
 		memset( &sigIntHandler, 0, sizeof(sigIntHandler) );
@@ -137,6 +180,14 @@ namespace Jde
 		signal( SIGKILL, OSApp::ExitHandler );
 		signal( SIGTERM, OSApp::ExitHandler );
 		signal( SIGALRM, OSApp::ExitHandler );
+		signal( SIGUSR1, OSApp::ExitHandler );
+
+/*		struct sigaction sa;
+	   sa.sa_flags = SA_RESTART | SA_SIGINFO;
+		sigemptyset( &sa.sa_mask );
+		sa.sa_sigaction = IO::LinuxDriveWorker::AioSigHandler;
+		THROW_IF( ::sigaction(SIGUSR1, &sa, nullptr)==-1,  "sigaction(SIGUSR1) returned {}", errno );
+*/
 		//sigaction( SIGSTOP, &sigIntHandler, nullptr );
 		//sigaction( SIGKILL, &sigIntHandler, nullptr );
 		//sigaction( SIGTERM, &sigIntHandler, nullptr );
@@ -146,12 +197,5 @@ namespace Jde
 	{
 		std::cout << "\033]0;" << title << "\007";
 	}
-
-	sp<IO::IDrive> IApplication::DriveApi()noexcept
-	{
-		auto p = make_shared<IO::Drive::NativeDrive>();
-		return p;
-	}
-
 }
 #undef var

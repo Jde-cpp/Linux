@@ -3,15 +3,127 @@
 #include <jde/io/File.h>
 
 #define var const auto
-
+//Test,
+// ignore SigUsr1 on applicable threads
 namespace Jde::IO
 {
-	std::shared_ptr<Jde::IO::IDrive> LoadNativeDrive()
+	Jde::IO::Drive::NativeDrive _native;
+	Jde::IO::IDrive& Native()noexcept{ return _native; }
+
+	void FileIOArg::Open()noexcept(false)
 	{
-		return std::make_shared<Jde::IO::Drive::NativeDrive>();
+		Handle = ::open( Path.string().c_str(), O_NONBLOCK | (IsRead ? O_RDONLY : O_WRONLY|O_CREAT|O_TRUNC) );
+		if( Handle==-1 )
+		{
+			Handle = 0;
+			THROW_IFX( IsRead || errno!=13, IOException(move(Path), errno, "open") );
+			THROW_IFX( ::remove(Path.string().c_str())==-1, IOException(move(Path), errno, "remove") );
+			Open();
+			return;
+		}
+		if( IsRead )
+		{
+			struct stat st;
+			THROW_IFX( ::fstat( Handle, &st )==-1, IOException(move(Path), errno, "fstat") );
+			std::visit( [size=st.st_size](auto&& b){b->resize(size);}, Buffer );
+		}
+	}
+	void DriveAwaitable::await_suspend( typename base::THandle h )noexcept
+	{
+		base::await_suspend( h );
+		CoroutinePool::Resume( move(h) );
+	}
+	TaskResult DriveAwaitable::await_resume()noexcept
+	{
+		base::AwaitResume();
+		try
+		{
+			if( ExceptionPtr )
+				std::rethrow_exception( ExceptionPtr );
+			var size = std::visit( [](auto&& x){return x->size();}, _arg.Buffer );
+			auto pData = std::visit( [](auto&& x){return x->data();}, _arg.Buffer );
+			auto pEnd = pData+size;
+			var chunkSize = DriveWorker::ChunkSize;
+			var count = size/chunkSize+1;
+			for( uint32 i=0; i<count; ++i )
+			{
+				auto pStart = pData+i*chunkSize;
+				auto chunkCount = std::min<ptrdiff_t>( chunkSize, pEnd-pStart );
+				if( _arg.IsRead )
+				{
+					THROW_IFX( ::read(_arg.Handle, pStart, chunkCount)==-1, IOException(_arg.Path, (uint)errno, "read()") );
+				}
+				else
+				{
+					THROW_IFX( ::write(_arg.Handle, pStart, chunkCount)==-1, IOException(_arg.Path, (uint)errno, "write()") );
+				}
+			}
+			::close( _arg.Handle );
+			sp<void> pVoid = std::visit( [](auto&& x){return (sp<void>)x;}, _arg.Buffer );
+			return TaskResult{ pVoid };
+		}
+		catch( const Exception& e )
+		{
+			return TaskResult{ std::make_exception_ptr(e) };
+		}
 	}
 
-namespace Drive
+/*	HFile FileIOArg::SubsequentHandle()noexcept
+	{
+		auto h = Handle;
+		if( h )
+			Handle = 0;
+		else
+		{
+			h = ::open( Path.string().c_str(), O_ASYNC | O_NONBLOCK | (IsRead ? O_RDONLY : O_WRONLY|O_CREAT|O_TRUNC) );
+			DBG( "[{}]{}"sv, h, Path.string().c_str() );
+		}
+		return h;
+	}
+	*/
+/*	up<IFileChunkArg> FileIOArg::CreateChunk( uint startIndex, uint endIndex )noexcept
+	{
+		return make_unique<LinuxFileChunkArg>( *this, startIndex, endIndex );
+	}
+*/
+/*	void LinuxDriveWorker::AioSigHandler( int sig, siginfo_t* pInfo, void* pContext )noexcept
+	{
+		auto pChunkArg = (IFileChunkArg*)pInfo->si_value.sival_ptr;
+		auto& fileArg = pChunkArg->FileArg();
+		DBG( "Processing {}"sv, pChunkArg->index );
+		if( fileArg.HandleChunkComplete(pChunkArg) )
+		{
+		//	if( ::close(pChunkArg->Handle())==-1 )
+			fileArg.CoHandle.promise().get_return_object().SetResult( IOException{fileArg.Path, (uint)errno, "close"} );
+			CoroutinePool::Resume( move(fileArg.CoHandle) );
+			//delete pFileArg;
+		}
+	}
+*/
+/*	LinuxFileChunkArg::LinuxFileChunkArg( FileIOArg& ioArg, uint start, uint length )noexcept:
+		IFileChunkArg{ ioArg }
+	{
+		//_linuxArg.aio_fildes = ioArg.FileHandle;
+		_linuxArg.aio_lio_opcode = ioArg.IsRead ? LIO_READ : LIO_WRITE;
+		_linuxArg.aio_reqprio = 0;
+		_linuxArg.aio_buf = ioArg.Data()+start;
+		_linuxArg.aio_nbytes = length;
+		_linuxArg.aio_sigevent.sigev_notify = SIGEV_SIGNAL;
+		_linuxArg.aio_sigevent.sigev_signo = DriveWorker::Signal;
+		_linuxArg.aio_sigevent.sigev_value.sival_ptr = this;
+	}
+	void LinuxFileChunkArg::Process()noexcept
+	{
+		DBG( "Sending chunk '{}' - handle='{}'"sv, index, handle );
+		_linuxArg.aio_fildes = handle;
+		var result = FileArg().IsRead ? ::aio_read( &_linuxArg ) : ::aio_write( &_linuxArg ); ERR_IF( result == -1, "aio({}) read={} returned false - {}", FileArg().Path.string(), FileArg().IsRead, errno );
+		//var result = ::aio_write( &_linuxArg );
+		ERR_IF( result == -1, "aio({}) read={} returned false - {}", FileArg().Path.string(), FileArg().IsRead, errno );
+		//return result!=-1;
+	}
+*/
+}
+namespace Jde::IO::Drive
 {
 	tuple<TimePoint,TimePoint,uint> GetAttributes( fs::path path )
 	{
@@ -132,4 +244,29 @@ namespace Drive
 		THROW_IF( result!=0, Exception("symlink creating '{}' referencing '{}' failed ({}){}.", newSymLink.string(), existingFile.string(), result, errno) );
 		DBG( "Created symlink '{}' referencing '{}'."sv, newSymLink.string(), existingFile.string() );
 	}
-}}
+
+/*	bool DriveWorker::Poll()noexcept
+	{
+		return base::Poll() || Args.size();//handle new queue item, from co_await Read() || currently handling item
+	}
+*/
+	// void DriveWorker::HandleRequest( FileIOArg&& arg )noexcept
+	// {
+	// 	auto pArg = &Args.emplace_back( move(arg) );
+	// 	var size = std::visit( [](auto&& x){return x->size();}, pArg->Buffer );
+	// 	for( uint i=0; i<size; i+=ChunkSize() )
+	// 	{
+	// 		auto pChunkArg = make_unique<LinuxFileChunkArg>( pArg, i, std::min(DriveWorker::ChunkSize(), size) );
+	// 		//Threading::AtomicGuard l{ pArg->Mutex };
+	// 		if( pArg->Overlaps.size()<ThreadCount )
+	// 			pArg->Send( move(pChunkArg) );
+	// 		else
+	// 			pArg->OverlapsOverflow.emplace_back( move(pChunkArg) );
+	// 	}
+	// }
+/*	void FileIOArg::Send( up<IFileChunkArg> pChunkArg )noexcept
+	{
+		if( pChunkArg->Process() )
+			Overlaps.emplace_back( move(pChunkArg) );
+	}*/
+}

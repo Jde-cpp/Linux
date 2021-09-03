@@ -1,11 +1,40 @@
 #pragma once
+#include <signal.h>
+#include <aio.h>
 #include "Exports.h"
 #include "../../Framework/source/io/DiskWatcher.h"
+#include "../../Framework/source/coroutine/Awaitable.h"
+//#include "../../Framework/source/threading/Worker.h"
+#include <jde/io/File.h>
 //#include "io/drive/DriveApi.h"
 
 /*JDE_LINUX_EXPORT*/
 //extern "C" Jde::IO::IDrive* LoadDrive();
 
+using namespace Jde::Coroutine;
+namespace Jde::IO
+{
+/*	struct LinuxFileChunkArg final : IFileChunkArg
+	{
+		LinuxFileChunkArg( FileIOArg& pIOArg, uint start, uint length )noexcept;
+		//uint StartIndex()const noexcept override;
+		//void SetStartIndex( uint i )noexcept override;
+		uint Bytes()const noexcept override{ return _linuxArg.aio_nbytes; } virtual void SetBytes( uint x )noexcept override{ _linuxArg.aio_nbytes=x; }
+		//void SetEndIndex( uint i )noexcept override;
+		//void SetFileIOArg( FileIOArg* p )noexcept override{ _fileIOArgPtr=p; }
+		HFile Handle()noexcept override{ return _linuxArg.aio_fildes; };
+		//void Process( int handle )noexcept override;
+		optional<bool> Complete()noexcept;
+	private:
+		//aiocb _linuxArg;
+	};
+*/
+	struct LinuxDriveWorker final : DriveWorker
+	{
+		//static void IOHandler( int s )noexcept;
+	//	static void AioSigHandler( int sig, siginfo_t* pInfo, void* pContext )noexcept;
+	};
+}
 namespace Jde::IO::Drive
 {
 	struct NativeDrive final: public IDrive

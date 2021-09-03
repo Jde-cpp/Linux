@@ -16,12 +16,12 @@ namespace Jde
 			return ThreadName;
 		}
 
-	void Threading::SetThreadDscrptn( std::thread& thread, std::string_view pszDescription )noexcept
+	void Threading::SetThreadDscrptn( std::thread& thread, sv pszDescription )noexcept
 	{
 	   pthread_setname_np( thread.native_handle(), string(pszDescription).c_str() );
 	}
 
-	void Threading::SetThreadDscrptn( const string& description )noexcept
+	void Threading::SetThreadDscrptn( sv description )noexcept
 	{
 		strncpy( ThreadName, str{description}.c_str(), NameLength );
 		prctl( PR_SET_NAME, ThreadName, 0, 0, 0 );
