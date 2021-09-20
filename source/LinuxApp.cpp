@@ -82,22 +82,22 @@ namespace Jde
 	}
 	atomic<bool> _workerMutex{false};
 	vector<sp<Threading::IWorker>> _workers;
-/*
-	void OSApp::OSPause()noexcept
+
+	void OSApp::Pause()noexcept
 	{
-		INFO( "Pausing main thread. {}"sv, getpid() );
-		auto result = ::pause();
-/ *		for( ;; )
+//		DBG( "Pausing main thread. {}", getpid() );
+		::pause();
+/*		for( ;; )
 		{
 			break;//not implemented yet.
 			auto pWorker = _activeWorkers.WaitAndPop();
 			if( pWorker->Poll() )
 				AddActiveWorker( pWorker );//make sure doesn't loop forever.
-		}* fas/
-		INFO( "Pause returned - {}."sv, result );
-		IApplication::Wait();
+		}*/
+//		DBG( "::pause errno={}.", errno );
+		//IApplication::Wait();
 	}
-*/
+
 	bool OSApp::AsService()noexcept
 	{
 		return ::daemon( 1, 0 )==0;
@@ -125,12 +125,13 @@ namespace Jde
 	}
 	fs::path OSApp::ProgramDataFolder()noexcept
 	{
-		return fs::path{ GetEnvironmentVariable("HOME"sv) };
+		return fs::path{ GetEnvironmentVariable("HOME") };
 	}
 
 	void OSApp::ExitHandler( int s )
 	{
-		ASSERT( false ); //TODO handle
+		Exit( s );
+		//ASSERT( false ); //TODO handle
 	//	signal( s, SIG_IGN );
 	//not supposed to log here...
 		//printf( "!!!!!!!!!!!!!!!!!!!!!Caught signal %d!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n",s );
@@ -143,9 +144,9 @@ namespace Jde
 	{
 		var result = ::kill( processId, 14 );
 		if( result )
-			ERR( "kill failed with '{}'."sv, result );
+			ERR( "kill failed with '{}'.", result );
 		else
-			INFO( "kill sent to:  '{}'."sv, processId );
+			INFO( "kill sent to:  '{}'.", processId );
 		return result==0;
 	}
 	up<flat_map<string,string>> _pArgs;

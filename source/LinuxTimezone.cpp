@@ -8,12 +8,6 @@
 #define var const auto
 namespace Jde
 {
-	// auto diff = Timezone::EasternTimezoneDifference( Clock::now() ); ASSERT( diff==-5h );
-	// diff = Timezone::EasternTimezoneDifference( DateTime{2020,3,8} ); ASSERT( diff==-5h );
-	// diff = Timezone::EasternTimezoneDifference( DateTime{2020,3,9} ); ASSERT( diff==-4h );
-	// diff = Timezone::EasternTimezoneDifference( DateTime{2020,11,1} ); ASSERT( diff==-4h );
-	// diff = Timezone::EasternTimezoneDifference( DateTime{2020,11,2} ); ASSERT( diff==-5h );
-
 	constexpr sv Magic = "TZif"sv;
 	struct tzhead
 	{
@@ -46,7 +40,6 @@ namespace Jde
 		if( is.bad() )
 			THROW( IOException("after header is.bad()") );
 
-		//unordered_map<string,map<TimePoint,Duration>> timeZones;
 		var count = ntohl( head.tzh_timecnt );
 		std::vector<TimePoint> transistionTimes; transistionTimes.reserve( count );
 		for( uint32_t i=0;i<count; ++i )
@@ -91,13 +84,12 @@ namespace Jde
 	Duration Timezone::GetGmtOffset( sv name, TimePoint utc )noexcept(false)
 	{
 		var key = fmt::format( "GetGmtOffset-{}", name );
-		auto pInfo = Cache::TryGet<CacheType>( key );
+		auto pInfo = Cache::Emplace<CacheType>( key );
 		if( !pInfo || !pInfo->size() )
 			Cache::Set<CacheType>( key, pInfo = LoadGmtOffset( name ) );
 		var pStartDuration = pInfo->lower_bound( utc );
 		if( pStartDuration==pInfo->end() )
 			THROW( Exception( "No info for '{}'", ToIsoString(utc) ) );
-		//TimePoint date{ pStartDuration->first };
 		const Duration value{ pStartDuration->second };
 		return value;
 	}
