@@ -14,26 +14,26 @@
 using namespace Jde::Coroutine;
 namespace Jde::IO
 {
-/*	struct LinuxFileChunkArg final : IFileChunkArg
+	struct LinuxChunk final : IFileChunkArg
 	{
-		LinuxFileChunkArg( FileIOArg& pIOArg, uint start, uint length )noexcept;
+		LinuxChunk( FileIOArg& pIOArg, uint index )noexcept;
 		//uint StartIndex()const noexcept override;
 		//void SetStartIndex( uint i )noexcept override;
-		uint Bytes()const noexcept override{ return _linuxArg.aio_nbytes; } virtual void SetBytes( uint x )noexcept override{ _linuxArg.aio_nbytes=x; }
+		//uint Bytes()const noexcept override{ return _linuxArg.aio_nbytes; } virtual void SetBytes( uint x )noexcept override{ _linuxArg.aio_nbytes=x; }
 		//void SetEndIndex( uint i )noexcept override;
 		//void SetFileIOArg( FileIOArg* p )noexcept override{ _fileIOArgPtr=p; }
-		HFile Handle()noexcept override{ return _linuxArg.aio_fildes; };
+		//HFile Handle()noexcept override{ return _linuxArg.aio_fildes; };
 		//void Process( int handle )noexcept override;
-		optional<bool> Complete()noexcept;
+		//optional<bool> Complete()noexcept;
 	private:
 		//aiocb _linuxArg;
 	};
-*/
-	struct LinuxDriveWorker final : DriveWorker
+
+/*	struct LinuxDriveWorker final : DriveWorker
 	{
 		//static void IOHandler( int s )noexcept;
 	//	static void AioSigHandler( int sig, siginfo_t* pInfo, void* pContext )noexcept;
-	};
+	};*/
 }
 namespace Jde::IO::Drive
 {

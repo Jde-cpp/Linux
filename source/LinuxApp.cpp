@@ -2,6 +2,8 @@
 #include <syslog.h>
 #include <execinfo.h>
 #include <signal.h>
+#include <dlfcn.h>
+
 #include "LinuxDrive.h"
 #include <jde/App.h>
 #include "../../Framework/source/threading/InterruptibleThread.h"
@@ -11,22 +13,38 @@
 #define var const auto
 namespace Jde
 {
-	void OSApp::Install( str serviceDescription )noexcept(false)
+	α OSApp::FreeLibrary( void* p )noexcept->void
+	{
+		::dlclose( p );
+	}
+
+	α OSApp::LoadLibrary( path path )noexcept(false)->void*
+	{
+		auto p = ::dlopen( path.c_str(), RTLD_LAZY );  THROW_IFX( !p, IOException("Can not load library '{}' - '{}'", path, dlerror()) );
+		INFO( "({})Opened"sv, path.string() );
+		return p;
+	}
+	α OSApp::GetProcAddress( void* pModule, str procName )noexcept(false)->void*
+	{
+		auto p = ::dlsym( pModule, procName.c_str() ); CHECK( p );
+		return p;
+	}
+	α OSApp::Install( str serviceDescription )noexcept(false)->void
 	{
 		THROW( "Not Implemeented" );
 	}
 
-	void OSApp::Uninstall()noexcept(false)
+	α OSApp::Uninstall()noexcept(false)->void
 	{
 		THROW( "Not Implemeented");
 	}
 
-	fs::path OSApp::Executable()noexcept
+	α OSApp::Executable()noexcept->fs::path
 	{
 		return fs::path{ program_invocation_name };
 	}
 
-	void IApplication::AddApplicationLog( ELogLevel level, str value )noexcept //called onterminate, needs to be static.
+	α IApplication::AddApplicationLog( ELogLevel level, str value )noexcept->void //called onterminate, needs to be static.
 	{
 		auto osLevel = LOG_DEBUG;
 		if( level==ELogLevel::Debug )
@@ -42,7 +60,7 @@ namespace Jde
 		syslog( osLevel, "%s",  value.c_str() );
 	}
 
-	size_t IApplication::MemorySize()noexcept//https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
+	α IApplication::MemorySize()noexcept->size_t//https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
 	{
 		uint size = 0;
 		FILE* fp = fopen( "/proc/self/statm", "r" );
@@ -56,7 +74,7 @@ namespace Jde
 		return size;
 	}
 
-	fs::path IApplication::Path()noexcept
+	α IApplication::Path()noexcept->fs::path
 	{
 		return std::filesystem::canonical( "/proc/self/exe" ).parent_path();
 		return fs::path( program_invocation_name );
@@ -83,7 +101,7 @@ namespace Jde
 	atomic<bool> _workerMutex{false};
 	vector<sp<Threading::IWorker>> _workers;
 
-	void OSApp::Pause()noexcept
+	α OSApp::Pause()noexcept->void
 	{
 //		DBG( "Pausing main thread. {}", getpid() );
 		::pause();
@@ -103,7 +121,7 @@ namespace Jde
 		return ::daemon( 1, 0 )==0;
 	}
 
-	void IApplication::OnTerminate()noexcept
+	α IApplication::OnTerminate()noexcept->void
 	{
 		void *trace_elems[20];
 		auto trace_elem_count( backtrace(trace_elems, 20) );
@@ -123,12 +141,12 @@ namespace Jde
 		return pEnv ? string{pEnv} : string{};
 
 	}
-	fs::path OSApp::ProgramDataFolder()noexcept
+	α OSApp::ProgramDataFolder()noexcept->fs::path
 	{
 		return fs::path{ GetEnvironmentVariable("HOME") };
 	}
 
-	void OSApp::ExitHandler( int s )
+	α OSApp::ExitHandler( int s )->void
 	{
 		Exit( s );
 		//ASSERT( false ); //TODO handle
@@ -140,7 +158,7 @@ namespace Jde
 		//exit( 1 );
 	}
 
-	bool OSApp::KillInstance( uint processId )noexcept
+	α OSApp::KillInstance( uint processId )noexcept->bool
 	{
 		var result = ::kill( processId, 14 );
 		if( result )
@@ -167,7 +185,7 @@ namespace Jde
 		}
 		return *_pArgs;
 	}
-	α OSApp::CompanyRootDir()noexcept->fs::path{ return path{ "."+IApplication::CompanyName() }; };
+	α OSApp::CompanyRootDir()noexcept->fs::path{ return path{ "."+OSApp::CompanyName() }; };
 
 	α OSApp::AddSignals()noexcept(false)->void/*noexcept(false) for windows*/
 	{
@@ -194,7 +212,7 @@ namespace Jde
 		//sigaction( SIGTERM, &sigIntHandler, nullptr );
 	}
 
-	void OSApp::SetConsoleTitle( sv title )noexcept
+	α OSApp::SetConsoleTitle( sv title )noexcept->void
 	{
 		std::cout << "\033]0;" << title << "\007";
 	}

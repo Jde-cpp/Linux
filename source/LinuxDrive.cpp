@@ -28,22 +28,32 @@ namespace Jde::IO
 			std::visit( [size=st.st_size](auto&& b){b->resize(size);}, Buffer );
 		}
 	}
-	void DriveAwaitable::await_suspend( typename base::THandle h )noexcept
+
+/*	α FileIOArg::CreateChunk( uint i )noexcept->up<IFileChunkArg>
 	{
-		base::await_suspend( h );
+		return make_unique<LinuxChunk>( *this, i );
+	}
+	α FileIOArg::OSSend()noexcept->void
+	{
 		CoroutinePool::Resume( move(h) );
 	}
-	TaskResult DriveAwaitable::await_resume()noexcept
+*/
+	void FileIOArg::Send( coroutine_handle<Task2::promise_type>&& h )noexcept
+	{
+		CoroutinePool::Resume( move(CoHandle) );
+	}
+
+	α DriveAwaitable::await_resume()noexcept->TaskResult
 	{
 		base::AwaitResume();
 		try
 		{
 			if( ExceptionPtr )
 				std::rethrow_exception( ExceptionPtr );
-			var size = std::visit( [](auto&& x){return x->size();}, _arg.Buffer );
+			var size = _arg.Size();
 			auto pData = std::visit( [](auto&& x){return x->data();}, _arg.Buffer );
 			auto pEnd = pData+size;
-			var chunkSize = DriveWorker::ChunkSize;
+			var chunkSize = DriveWorker::ChunkSize();
 			var count = size/chunkSize+1;
 			for( uint32 i=0; i<count; ++i )
 			{
@@ -68,6 +78,14 @@ namespace Jde::IO
 		}
 	}
 
+
+/*
+	void DriveAwaitable::await_suspend( typename base::THandle h )noexcept
+	{
+		base::await_suspend( h );
+		CoroutinePool::Resume( move(h) );
+	}
+*/
 /*	HFile FileIOArg::SubsequentHandle()noexcept
 	{
 		auto h = Handle;
