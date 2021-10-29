@@ -16,15 +16,15 @@ namespace Jde::IO
 		if( Handle==-1 )
 		{
 			Handle = 0;
-			THROW_IFX( IsRead || errno!=13, IOException(move(Path), errno, "open") );
-			THROW_IFX( ::remove(Path.string().c_str())==-1, IOException(move(Path), errno, "remove") );
+			THROW_IFX2( IsRead || errno!=13, IOException(move(Path), errno, "open") );
+			THROW_IFX2( ::remove(Path.string().c_str())==-1, IOException(move(Path), errno, "remove") );
 			Open();
 			return;
 		}
 		if( IsRead )
 		{
 			struct stat st;
-			THROW_IFX( ::fstat( Handle, &st )==-1, IOException(move(Path), errno, "fstat") );
+			THROW_IFX2( ::fstat( Handle, &st )==-1, IOException(move(Path), errno, "fstat") );
 			std::visit( [size=st.st_size](auto&& b){b->resize(size);}, Buffer );
 		}
 	}
@@ -61,11 +61,11 @@ namespace Jde::IO
 				auto chunkCount = std::min<ptrdiff_t>( chunkSize, pEnd-pStart );
 				if( _arg.IsRead )
 				{
-					THROW_IFX( ::read(_arg.Handle, pStart, chunkCount)==-1, IOException(_arg.Path, (uint)errno, "read()") );
+					THROW_IFX2( ::read(_arg.Handle, pStart, chunkCount)==-1, IOException(_arg.Path, (uint)errno, "read()") );
 				}
 				else
 				{
-					THROW_IFX( ::write(_arg.Handle, pStart, chunkCount)==-1, IOException(_arg.Path, (uint)errno, "write()") );
+					THROW_IFX2( ::write(_arg.Handle, pStart, chunkCount)==-1, IOException(_arg.Path, (uint)errno, "write()") );
 				}
 			}
 			::close( _arg.Handle );
@@ -180,8 +180,7 @@ namespace Jde::IO::Drive
 	}
 	map<string,IDirEntryPtr>  NativeDrive::Recursive( path dir )noexcept(false)
 	{
-		if( !fs::exists(dir) )
-			THROW( IOException( "'{}' does not exist.", dir) );
+		CHECK_PATH( dir );
 		var dirString = dir.string();
 		map<string,IDirEntryPtr> entries;
 
@@ -259,7 +258,7 @@ namespace Jde::IO::Drive
 	void NativeDrive::SoftLink( path existingFile, path newSymLink )noexcept(false)
 	{
 		var result = ::symlink( existingFile.string().c_str(), newSymLink.string().c_str() );
-		THROW_IF( result!=0, Exception("symlink creating '{}' referencing '{}' failed ({}){}.", newSymLink.string(), existingFile.string(), result, errno) );
+		THROW_IF( result!=0, "symlink creating '{}' referencing '{}' failed ({}){}.", newSymLink.string(), existingFile.string(), result, errno );
 		DBG( "Created symlink '{}' referencing '{}'."sv, newSymLink.string(), existingFile.string() );
 	}
 

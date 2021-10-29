@@ -28,17 +28,13 @@ namespace Jde
 			name = "EST5EDT";
 		else if( name=="MET (Middle Europe Time)" )
 			name = "MET";
-		const fs::path path{ fs::path{"/usr/share/zoneinfo"}/fs::path{name} };
-		if( !fs::exists(path) )
-			THROW( IOException("Could not open '{}'", path.string()) );
+		const fs::path path{ fs::path{"/usr/share/zoneinfo"}/fs::path{name} }; CHECK_PATH( path );
 
 		std::ifstream is{ path.string() };
 		tzhead head;
 		is.read(  (char*)&head, sizeof(tzhead) );
-		if( string(head.tzh_magic,4)!=string(Magic) )
-			THROW( IOException("Magic not equal '{}'", string(head.tzh_magic,4)) );
-		if( is.bad() )
-			THROW( IOException("after header is.bad()") );
+		THROW_IFX2( string(head.tzh_magic,4)!=string(Magic), IO_EX(path, "Magic not equal '{}'", string(head.tzh_magic,4)) );
+		THROW_IFX2( is.bad(), IOException(path,"after header is.bad()") );
 
 		var count = ntohl( head.tzh_timecnt );
 		std::vector<TimePoint> transistionTimes; transistionTimes.reserve( count );
@@ -63,14 +59,12 @@ namespace Jde
 			/*unsigned char isDst =*/ is.get();
 			/*unsigned char abbreviationIndex = */ is.get();
 		}
-		if( is.bad() )
-			THROW( IOException("is.bad()") );
+		THROW_IFX2( is.bad(), IOException(path,"is.bad()") );
 
 		auto pResults = make_shared<CacheType>();
 		for( var [time,type] : timeTypes )
 		{
-			if( type>=typeOffsets.size() )
-				THROW( IOException("type>=typeOffsets.size() {}>={}", type, typeOffsets.size()) );
+			THROW_IFX2( type>=typeOffsets.size(), IO_EX(path,"type>=typeOffsets.size() {}>={}", type, typeOffsets.size()) );
 			pResults->emplace( time, std::chrono::seconds(typeOffsets[type]) );
 		}
 		return pResults;
@@ -88,8 +82,7 @@ namespace Jde
 		if( !pInfo || !pInfo->size() )
 			Cache::Set<CacheType>( key, pInfo = LoadGmtOffset( name ) );
 		var pStartDuration = pInfo->lower_bound( utc );
-		if( pStartDuration==pInfo->end() )
-			THROW( Exception( "No info for '{}'", ToIsoString(utc) ) );
+		THROW_IF( pStartDuration==pInfo->end(), "No info for '{}'", ToIsoString(utc) );
 		const Duration value{ pStartDuration->second };
 		return value;
 	}

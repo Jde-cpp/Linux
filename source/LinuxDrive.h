@@ -47,8 +47,8 @@ namespace Jde::IO::Drive
 		void Trash( path path )noexcept override;
 		VectorPtr<char> Load( const IDirEntry& dirEntry )noexcept(false) override;
 		void Remove( path )noexcept(false) override;
-		void TrashDisposal( TimePoint /*latestDate*/ )noexcept(false)override{ THROW(Exception("Not Implemented")); };
-		void Restore( sv name )noexcept(false)override{ THROW(Exception("Not Implemented")); };
+		void TrashDisposal( TimePoint /*latestDate*/ )noexcept(false)override{ THROW("Not Implemented"); };
+		void Restore( sv name )noexcept(false)override{ THROW("Not Implemented"); };
 		void SoftLink( path existingFile, path newSymLink )noexcept(false) override;
 	};
 }

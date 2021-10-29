@@ -20,7 +20,7 @@ namespace Jde
 
 	α OSApp::LoadLibrary( path path )noexcept(false)->void*
 	{
-		auto p = ::dlopen( path.c_str(), RTLD_LAZY );  THROW_IFX( !p, IOException("Can not load library '{}' - '{}'", path, dlerror()) );
+		auto p = ::dlopen( path.c_str(), RTLD_LAZY );  THROW_IFX2( !p, IO_EX(path, "Can not load library - '{}'", dlerror()) );
 		INFO( "({})Opened"sv, path.string() );
 		return p;
 	}
@@ -93,7 +93,7 @@ namespace Jde
 		return getpid();
 	}
 
-	set<string> OSApp::Startup( int argc, char** argv, sv appName, string serviceDescription )noexcept(false)
+	flat_set<string> OSApp::Startup( int argc, char** argv, sv appName, string serviceDescription )noexcept(false)
 	{
 		IApplication::_pInstance = make_shared<OSApp>();
 		return IApplication::_pInstance->BaseStartup( argc, argv, appName, serviceDescription );
