@@ -33,8 +33,8 @@ namespace Jde
 		std::ifstream is{ path.string() };
 		tzhead head;
 		is.read(  (char*)&head, sizeof(tzhead) );
-		THROW_IFX2( string(head.tzh_magic,4)!=string(Magic), IO_EX(path, "Magic not equal '{}'", string(head.tzh_magic,4)) );
-		THROW_IFX2( is.bad(), IOException(path,"after header is.bad()") );
+		THROW_IFX( string(head.tzh_magic,4)!=string(Magic), IO_EX(path, "Magic not equal '{}'", string(head.tzh_magic,4)) );
+		THROW_IFX( is.bad(), IOException(path,"after header is.bad()") );
 
 		var count = ntohl( head.tzh_timecnt );
 		std::vector<TimePoint> transistionTimes; transistionTimes.reserve( count );
@@ -59,12 +59,12 @@ namespace Jde
 			/*unsigned char isDst =*/ is.get();
 			/*unsigned char abbreviationIndex = */ is.get();
 		}
-		THROW_IFX2( is.bad(), IOException(path,"is.bad()") );
+		THROW_IFX( is.bad(), IOException(path,"is.bad()") );
 
 		auto pResults = make_shared<CacheType>();
 		for( var [time,type] : timeTypes )
 		{
-			THROW_IFX2( type>=typeOffsets.size(), IO_EX(path,"type>=typeOffsets.size() {}>={}", type, typeOffsets.size()) );
+			THROW_IFX( type>=typeOffsets.size(), IO_EX(path,"type>=typeOffsets.size() {}>={}", type, typeOffsets.size()) );
 			pResults->emplace( time, std::chrono::seconds(typeOffsets[type]) );
 		}
 		return pResults;

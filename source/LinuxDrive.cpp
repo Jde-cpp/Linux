@@ -16,15 +16,15 @@ namespace Jde::IO
 		if( Handle==-1 )
 		{
 			Handle = 0;
-			THROW_IFX2( IsRead || errno!=13, IOException(move(Path), errno, "open") );
-			THROW_IFX2( ::remove(Path.string().c_str())==-1, IOException(move(Path), errno, "remove") );
+			THROW_IFX( IsRead || errno!=13, IOException(move(Path), errno, "open") );
+			THROW_IFX( ::remove(Path.string().c_str())==-1, IOException(move(Path), errno, "remove") );
 			Open();
 			return;
 		}
 		if( IsRead )
 		{
 			struct stat st;
-			THROW_IFX2( ::fstat( Handle, &st )==-1, IOException(move(Path), errno, "fstat") );
+			THROW_IFX( ::fstat( Handle, &st )==-1, IOException(move(Path), errno, "fstat") );
 			std::visit( [size=st.st_size](auto&& b){b->resize(size);}, Buffer );
 		}
 	}
@@ -40,16 +40,17 @@ namespace Jde::IO
 */
 	void FileIOArg::Send( coroutine_handle<Task2::promise_type>&& h )noexcept
 	{
+		CoHandle = h;
 		CoroutinePool::Resume( move(CoHandle) );
 	}
 
 	α DriveAwaitable::await_resume()noexcept->TaskResult
 	{
 		base::AwaitResume();
+		if( ExceptionPtr )
+			return TaskResult{ ExceptionPtr };
 		try
 		{
-			if( ExceptionPtr )
-				std::rethrow_exception( ExceptionPtr );
 			var size = _arg.Size();
 			auto pData = std::visit( [](auto&& x){return x->data();}, _arg.Buffer );
 			auto pEnd = pData+size;
@@ -61,20 +62,18 @@ namespace Jde::IO
 				auto chunkCount = std::min<ptrdiff_t>( chunkSize, pEnd-pStart );
 				if( _arg.IsRead )
 				{
-					THROW_IFX2( ::read(_arg.Handle, pStart, chunkCount)==-1, IOException(_arg.Path, (uint)errno, "read()") );
+					THROW_IFX( ::read(_arg.Handle, pStart, chunkCount)==-1, IOException(_arg.Path, (uint)errno, "read()") );
 				}
 				else
-				{
-					THROW_IFX2( ::write(_arg.Handle, pStart, chunkCount)==-1, IOException(_arg.Path, (uint)errno, "write()") );
-				}
+					THROW_IFX( ::write(_arg.Handle, pStart, chunkCount)==-1, IOException(_arg.Path, (uint)errno, "write()") );
 			}
 			::close( _arg.Handle );
 			sp<void> pVoid = std::visit( [](auto&& x){return (sp<void>)x;}, _arg.Buffer );
 			return TaskResult{ pVoid };
 		}
-		catch( const Exception& e )
+		catch( IException& e )
 		{
-			return TaskResult{ std::make_exception_ptr(e) };
+			return TaskResult{ e.Clone() };
 		}
 	}
 

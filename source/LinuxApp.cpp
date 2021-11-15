@@ -20,7 +20,7 @@ namespace Jde
 
 	α OSApp::LoadLibrary( path path )noexcept(false)->void*
 	{
-		auto p = ::dlopen( path.c_str(), RTLD_LAZY );  THROW_IFX2( !p, IO_EX(path, "Can not load library - '{}'", dlerror()) );
+		auto p = ::dlopen( path.c_str(), RTLD_LAZY );  THROW_IFX( !p, IO_EX(path, "Can not load library - '{}'", dlerror()) );
 		INFO( "({})Opened"sv, path.string() );
 		return p;
 	}
