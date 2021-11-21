@@ -40,7 +40,7 @@ namespace Jde::IO::Drive
 	struct NativeDrive final: public IDrive
 	{
 		//void Recursive2( path dir )noexcept(false);
-		map<string,IDirEntryPtr> Recursive( path dir )noexcept(false) override;
+		flat_map<string,IDirEntryPtr> Recursive( path dir )noexcept(false) override;
 		IDirEntryPtr Get( path path )noexcept(false) override;
 		IDirEntryPtr Save( path path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false) override;
 		IDirEntryPtr CreateFolder( path path, const IDirEntry& dirEntry )noexcept(false) override;

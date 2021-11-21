@@ -33,7 +33,7 @@ namespace Jde
 	{
 		THROW( "Not Implemeented" );
 	}
-
+	α OSApp::UnPause()noexcept->void{ ASSERT(false); }//not sure of use case
 	α OSApp::Uninstall()noexcept(false)->void
 	{
 		THROW( "Not Implemeented");

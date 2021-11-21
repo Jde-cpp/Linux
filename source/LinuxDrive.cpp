@@ -7,19 +7,25 @@
 // ignore SigUsr1 on applicable threads
 namespace Jde::IO
 {
-	Jde::IO::Drive::NativeDrive _native;
-	Jde::IO::IDrive& Native()noexcept{ return _native; }
+	Drive::NativeDrive _native;
+	α Native()noexcept->IDrive&{ return _native; }
 
-	void FileIOArg::Open()noexcept(false)
+	α FileIOArg::Open()noexcept(false)->void
 	{
-		Handle = ::open( Path.string().c_str(), O_NONBLOCK | (IsRead ? O_RDONLY : O_WRONLY|O_CREAT|O_TRUNC) );
+		Handle = ::open( Path.string().c_str(), O_NONBLOCK | (IsRead ? O_RDONLY : O_WRONLY|O_CREAT|O_TRUNC), 0666 );
 		if( Handle==-1 )
 		{
 			Handle = 0;
-			THROW_IFX( IsRead || errno!=13, IOException(move(Path), errno, "open") );
-			THROW_IFX( ::remove(Path.string().c_str())==-1, IOException(move(Path), errno, "remove") );
-			Open();
-			return;
+			if( !IsRead && errno==ENOENT )
+			{
+				fs::create_directories( Path.parent_path() );
+				INFO( "Created dir {}", Path.parent_path() );
+				return Open();
+			}
+			THROW_IFX( IsRead /*|| errno!=EACCES*/, IOException(move(Path), errno, "open") );
+			//THROW_IFX( ::remove(Path.string().c_str())==-1, IOException(move(Path), errno, "remove") );
+			//Open();
+			//return;
 		}
 		if( IsRead )
 		{
@@ -38,7 +44,7 @@ namespace Jde::IO
 		CoroutinePool::Resume( move(h) );
 	}
 */
-	void FileIOArg::Send( coroutine_handle<Task2::promise_type>&& h )noexcept
+	α FileIOArg::Send( coroutine_handle<Task2::promise_type>&& h )noexcept->void
 	{
 		CoHandle = h;
 		CoroutinePool::Resume( move(CoHandle) );
@@ -79,7 +85,7 @@ namespace Jde::IO
 
 
 /*
-	void DriveAwaitable::await_suspend( typename base::THandle h )noexcept
+	α DriveAwaitable::await_suspend( typename base::THandle h )noexcept->void
 	{
 		base::await_suspend( h );
 		CoroutinePool::Resume( move(h) );
@@ -103,7 +109,7 @@ namespace Jde::IO
 		return make_unique<LinuxFileChunkArg>( *this, startIndex, endIndex );
 	}
 */
-/*	void LinuxDriveWorker::AioSigHandler( int sig, siginfo_t* pInfo, void* pContext )noexcept
+/*	α LinuxDriveWorker::AioSigHandler( int sig, siginfo_t* pInfo, void* pContext )noexcept->void
 	{
 		auto pChunkArg = (IFileChunkArg*)pInfo->si_value.sival_ptr;
 		auto& fileArg = pChunkArg->FileArg();
@@ -129,7 +135,7 @@ namespace Jde::IO
 		_linuxArg.aio_sigevent.sigev_signo = DriveWorker::Signal;
 		_linuxArg.aio_sigevent.sigev_value.sival_ptr = this;
 	}
-	void LinuxFileChunkArg::Process()noexcept
+	α LinuxFileChunkArg::Process()noexcept->void
 	{
 		DBG( "Sending chunk '{}' - handle='{}'"sv, index, handle );
 		_linuxArg.aio_fildes = handle;
@@ -142,7 +148,7 @@ namespace Jde::IO
 }
 namespace Jde::IO::Drive
 {
-	tuple<TimePoint,TimePoint,uint> GetAttributes( fs::path path )
+	α GetAttributes( fs::path path )->tuple<TimePoint,TimePoint,uint>
 	{
 		struct stat attrib;
 		stat( path.string().c_str(), &attrib );
@@ -172,16 +178,16 @@ namespace Jde::IO::Drive
 			AccessedTime = accessed;
 		}
 	};
-	IDirEntryPtr NativeDrive::Get( path path )noexcept(false)
+	α NativeDrive::Get( path path )noexcept(false)->IDirEntryPtr
 	{
 		sp<const IDirEntry> pEntry = make_shared<const DirEntry>( path );
 		return pEntry;
 	}
-	map<string,IDirEntryPtr>  NativeDrive::Recursive( path dir )noexcept(false)
+	α NativeDrive::Recursive( path dir )noexcept(false)->flat_map<string,IDirEntryPtr>
 	{
 		CHECK_PATH( dir );
 		var dirString = dir.string();
-		map<string,IDirEntryPtr> entries;
+		flat_map<string,IDirEntryPtr> entries;
 
 		std::function<void(const fs::directory_entry&)> fnctn;
 		fnctn = [&dirString, &entries, &fnctn]( const fs::directory_entry& entry )
@@ -201,14 +207,14 @@ namespace Jde::IO::Drive
 
 		return entries;
 	}
-	timespec to_timespec( const TimePoint& time )
+	α to_timespec( const TimePoint& time )->timespec
 	{
 		var sinceEpoch = time.time_since_epoch();
 		var total = duration_cast<std::chrono::nanoseconds>( duration_cast<std::chrono::nanoseconds>( sinceEpoch )-duration_cast<std::chrono::seconds>( sinceEpoch ) ).count();
 
 		return { Clock::to_time_t(time), total };
 	}
-	IDirEntryPtr NativeDrive::CreateFolder( path dir, const IDirEntry& dirEntry )noexcept(false)
+	α NativeDrive::CreateFolder( path dir, const IDirEntry& dirEntry )noexcept(false)->IDirEntryPtr
 	{
 		fs::create_directory( dir );
 		if( dirEntry.ModifiedTime.time_since_epoch()!=Duration::zero() )
@@ -222,7 +228,7 @@ namespace Jde::IO::Drive
 		}
 		return make_shared<DirEntry>( dir );
 	}
-	IDirEntryPtr NativeDrive::Save( path path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false)
+	α NativeDrive::Save( path path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false)->IDirEntryPtr
 	{
 		IO::FileUtilities::SaveBinary( path, bytes );
 		if( dirEntry.ModifiedTime.time_since_epoch()!=Duration::zero() )
@@ -237,24 +243,24 @@ namespace Jde::IO::Drive
 	}
 
 	//VectorPtr<char> NativeDrive::Load( path path )noexcept(false)
-	VectorPtr<char> NativeDrive::Load( const IDirEntry& dirEntry )noexcept(false)//fs::filesystem_error, IOException
+	α NativeDrive::Load( const IDirEntry& dirEntry )noexcept(false)->VectorPtr<char>//fs::filesystem_error, IOException
 	{
 		return IO::FileUtilities::LoadBinary( dirEntry.Path );
 	}
 
-	void NativeDrive::Remove( path path )noexcept(false)
+	α NativeDrive::Remove( path path )noexcept(false)->void
 	{
 		DBG( "Removing '{}'."sv, path.string() );
 		fs::remove( path );
 	}
-	void NativeDrive::Trash( path path )noexcept
+	α NativeDrive::Trash( path path )noexcept->void
 	{
 		DBG( "Trashing '{}'."sv, path.string() );
 
 		var result = system( fmt::format("gio trash {}", path.string()).c_str() );
 		DBG( "Trashing '{}' returned '{}'."sv, path.string(), result );
 	}
-	void NativeDrive::SoftLink( path existingFile, path newSymLink )noexcept(false)
+	α NativeDrive::SoftLink( path existingFile, path newSymLink )noexcept(false)->void
 	{
 		var result = ::symlink( existingFile.string().c_str(), newSymLink.string().c_str() );
 		THROW_IF( result!=0, "symlink creating '{}' referencing '{}' failed ({}){}.", newSymLink.string(), existingFile.string(), result, errno );
@@ -266,7 +272,7 @@ namespace Jde::IO::Drive
 		return base::Poll() || Args.size();//handle new queue item, from co_await Read() || currently handling item
 	}
 */
-	// void DriveWorker::HandleRequest( FileIOArg&& arg )noexcept
+	// α DriveWorker::HandleRequest( FileIOArg&& arg )noexcept->void
 	// {
 	// 	auto pArg = &Args.emplace_back( move(arg) );
 	// 	var size = std::visit( [](auto&& x){return x->size();}, pArg->Buffer );
@@ -280,7 +286,7 @@ namespace Jde::IO::Drive
 	// 			pArg->OverlapsOverflow.emplace_back( move(pChunkArg) );
 	// 	}
 	// }
-/*	void FileIOArg::Send( up<IFileChunkArg> pChunkArg )noexcept
+/*	α FileIOArg::Send( up<IFileChunkArg> pChunkArg )noexcept->void
 	{
 		if( pChunkArg->Process() )
 			Overlaps.emplace_back( move(pChunkArg) );

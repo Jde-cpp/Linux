@@ -21,7 +21,7 @@ namespace Jde
 		uint32_t tzh_typecnt;		/* coded number of local time types */
 		char	tzh_charcnt[4];		/* coded number of abbr. chars */
 	};
-	typedef map<TimePoint,Duration, std::greater<TimePoint>> CacheType;
+	typedef flat_map<TimePoint,Duration, std::greater<TimePoint>> CacheType;
 	sp<CacheType> LoadGmtOffset( sv name )noexcept(false)
 	{
 		if( name=="EST (Eastern Standard Time)" )
