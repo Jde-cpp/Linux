@@ -8,11 +8,11 @@
 #include <jde/App.h>
 #include "../../Framework/source/threading/InterruptibleThread.h"
 
-
-
 #define var const auto
 namespace Jde
 {
+	static const LogTag& _logLevel = Logging::TagLevel( "status" );
+
 	α OSApp::FreeLibrary( void* p )noexcept->void
 	{
 		::dlclose( p );
@@ -21,7 +21,7 @@ namespace Jde
 	α OSApp::LoadLibrary( path path )noexcept(false)->void*
 	{
 		auto p = ::dlopen( path.c_str(), RTLD_LAZY );  THROW_IFX( !p, IO_EX(path, "Can not load library - '{}'", dlerror()) );
-		INFO( "({})Opened"sv, path.string() );
+		LOG( "({})Opened"sv, path.string() );
 		return p;
 	}
 	α OSApp::GetProcAddress( void* pModule, str procName )noexcept(false)->void*
@@ -59,6 +59,7 @@ namespace Jde
 			osLevel = LOG_CRIT;
 		syslog( osLevel, "%s",  value.c_str() );
 	}
+	α OSApp::CompanyName()noexcept->string{ return "Jde-Cpp"; }
 
 	α IApplication::MemorySize()noexcept->size_t//https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
 	{
@@ -103,7 +104,7 @@ namespace Jde
 
 	α OSApp::Pause()noexcept->void
 	{
-//		DBG( "Pausing main thread. {}", getpid() );
+//		LOG( "Pausing main thread. {}", getpid() );
 		::pause();
 /*		for( ;; )
 		{
@@ -112,7 +113,7 @@ namespace Jde
 			if( pWorker->Poll() )
 				AddActiveWorker( pWorker );//make sure doesn't loop forever.
 		}*/
-//		DBG( "::pause errno={}.", errno );
+//		LOG( "::pause errno={}.", errno );
 		//IApplication::Wait();
 	}
 
@@ -164,7 +165,7 @@ namespace Jde
 		if( result )
 			ERR( "kill failed with '{}'.", result );
 		else
-			INFO( "kill sent to:  '{}'.", processId );
+			LOG( "kill sent to:  '{}'.", processId );
 		return result==0;
 	}
 	up<flat_map<string,string>> _pArgs;

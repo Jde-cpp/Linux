@@ -70,12 +70,12 @@ namespace Jde
 		return pResults;
 	}
 
-	Duration Timezone::EasternTimezoneDifference( TimePoint utc )noexcept
+	Duration Timezone::EasternTimezoneDifference( TimePoint utc, SL sl )noexcept(false)
 	{
 		return TryGetGmtOffset( "EST5EDT", utc );
 	}
 
-	Duration Timezone::GetGmtOffset( sv name, TimePoint utc )noexcept(false)
+	Duration Timezone::GetGmtOffset( sv name, TimePoint utc, SL sl )noexcept(false)
 	{
 		var key = fmt::format( "GetGmtOffset-{}", name );
 		auto pInfo = Cache::Emplace<CacheType>( key );
