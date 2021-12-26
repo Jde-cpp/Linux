@@ -1,6 +1,7 @@
 #include "LinuxDrive.h"
 #include <unistd.h>
 #include <jde/io/File.h>
+#include "../../Framework/source/Cache.h"
 
 #define var const auto
 //Test,
@@ -44,17 +45,22 @@ namespace Jde::IO
 		CoroutinePool::Resume( move(h) );
 	}
 */
-	α FileIOArg::Send( coroutine_handle<Task2::promise_type>&& h )noexcept->void
+	α FileIOArg::Send( coroutine_handle<Task::promise_type>&& h )noexcept->void
 	{
 		CoHandle = h;
 		CoroutinePool::Resume( move(CoHandle) );
 	}
 
-	α DriveAwaitable::await_resume()noexcept->TaskResult
+	α DriveAwaitable::await_resume()noexcept->AwaitResult
 	{
 		base::AwaitResume();
 		if( ExceptionPtr )
-			return TaskResult{ ExceptionPtr };
+			return AwaitResult{ ExceptionPtr };
+		if( _cache && Cache::Has(_arg.Path) )
+		{
+			sp<void> pVoid = std::visit( [](auto&& x){return (sp<void>)x;}, _arg.Buffer );
+			return AwaitResult{ pVoid };
+		}
 		try
 		{
 			var size = _arg.Size();
@@ -75,11 +81,14 @@ namespace Jde::IO
 			}
 			::close( _arg.Handle );
 			sp<void> pVoid = std::visit( [](auto&& x){return (sp<void>)x;}, _arg.Buffer );
-			return TaskResult{ pVoid };
+			if( _cache )
+				Cache::Set( _arg.Path, pVoid );
+
+			return AwaitResult{ pVoid };
 		}
 		catch( IException& e )
 		{
-			return TaskResult{ e.Clone() };
+			return AwaitResult{ e.Clone() };
 		}
 	}
 
