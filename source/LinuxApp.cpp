@@ -136,7 +136,7 @@ namespace Jde
 		exit( EXIT_FAILURE );
 	}
 
-	string OSApp::GetEnvironmentVariable( sv variable )noexcept
+	string OSApp::EnvironmentVariable( str variable )noexcept
 	{
 		char* pEnv = std::getenv( string{variable}.c_str() );
 		return pEnv ? string{pEnv} : string{};
@@ -144,7 +144,7 @@ namespace Jde
 	}
 	α OSApp::ProgramDataFolder()noexcept->fs::path
 	{
-		return fs::path{ GetEnvironmentVariable("HOME") };
+		return fs::path{ EnvironmentVariable("HOME") };
 	}
 
 	α OSApp::ExitHandler( int s )->void
