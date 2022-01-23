@@ -4,12 +4,7 @@
 #include "Exports.h"
 #include "../../Framework/source/io/DiskWatcher.h"
 #include "../../Framework/source/coroutine/Awaitable.h"
-//#include "../../Framework/source/threading/Worker.h"
 #include <jde/io/File.h>
-//#include "io/drive/DriveApi.h"
-
-/*JDE_LINUX_EXPORT*/
-//extern "C" Jde::IO::IDrive* LoadDrive();
 
 using namespace Jde::Coroutine;
 namespace Jde::IO
@@ -40,7 +35,7 @@ namespace Jde::IO::Drive
 	struct NativeDrive final: public IDrive
 	{
 		//void Recursive2( path dir )noexcept(false);
-		flat_map<string,IDirEntryPtr> Recursive( path dir )noexcept(false) override;
+		flat_map<string,IDirEntryPtr> Recursive( path dir, SRCE )noexcept(false) override;
 		IDirEntryPtr Get( path path )noexcept(false) override;
 		IDirEntryPtr Save( path path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false) override;
 		IDirEntryPtr CreateFolder( path path, const IDirEntry& dirEntry )noexcept(false) override;

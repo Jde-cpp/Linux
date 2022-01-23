@@ -28,7 +28,7 @@ namespace Jde
 			name = "EST5EDT";
 		else if( name=="MET (Middle Europe Time)" )
 			name = "MET";
-		const fs::path path{ fs::path{"/usr/share/zoneinfo"}/fs::path{name} }; CHECK_PATH( path );
+		const fs::path path{ fs::path{"/usr/share/zoneinfo"}/fs::path{name} }; CHECK_PATH( path, SRCE_CUR );
 
 		std::ifstream is{ path.string() };
 		tzhead head;

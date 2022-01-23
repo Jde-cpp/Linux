@@ -1,4 +1,3 @@
-//#include "ApplicationLinux.h"
 #include <syslog.h>
 #include <execinfo.h>
 #include <signal.h>
@@ -78,7 +77,6 @@ namespace Jde
 	α IApplication::Path()noexcept->fs::path
 	{
 		return std::filesystem::canonical( "/proc/self/exe" ).parent_path();
-		return fs::path( program_invocation_name );
 	}
 
 	string IApplication::HostName()noexcept
@@ -218,4 +216,3 @@ namespace Jde
 		std::cout << "\033]0;" << title << "\007";
 	}
 }
-#undef var

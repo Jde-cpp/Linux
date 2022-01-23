@@ -192,9 +192,9 @@ namespace Jde::IO::Drive
 		sp<const IDirEntry> pEntry = make_shared<const DirEntry>( path );
 		return pEntry;
 	}
-	α NativeDrive::Recursive( path dir )noexcept(false)->flat_map<string,IDirEntryPtr>
+	α NativeDrive::Recursive( path dir, SL sl )noexcept(false)->flat_map<string,IDirEntryPtr>
 	{
-		CHECK_PATH( dir );
+		CHECK_PATH( dir, sl );
 		var dirString = dir.string();
 		flat_map<string,IDirEntryPtr> entries;
 
