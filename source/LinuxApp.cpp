@@ -20,7 +20,7 @@ namespace Jde
 	α OSApp::LoadLibrary( path path )noexcept(false)->void*
 	{
 		auto p = ::dlopen( path.c_str(), RTLD_LAZY );  THROW_IFX( !p, IO_EX(path, "Can not load library - '{}'", dlerror()) );
-		LOG( "({})Opened"sv, path.string() );
+		INFO( "({})Opened"sv, path.string() );
 		return p;
 	}
 	α OSApp::GetProcAddress( void* pModule, str procName )noexcept(false)->void*
@@ -74,23 +74,17 @@ namespace Jde
 		return size;
 	}
 
-	α IApplication::Path()noexcept->fs::path
-	{
-		return std::filesystem::canonical( "/proc/self/exe" ).parent_path();
-	}
+	α IApplication::ExePath()noexcept->fs::path{ return fs::canonical( "/proc/self/exe" ); }
 
 	string IApplication::HostName()noexcept
 	{
 		constexpr uint maxHostName = HOST_NAME_MAX;
 		char hostname[maxHostName];
-		gethostname( hostname, maxHostName );
+		::gethostname( hostname, maxHostName );
 		return hostname;
 	}
 
-	uint OSApp::ProcessId()noexcept
-	{
-		return getpid();
-	}
+	uint OSApp::ProcessId()noexcept{ return getpid(); }
 
 	flat_set<string> OSApp::Startup( int argc, char** argv, sv appName, string serviceDescription )noexcept(false)
 	{

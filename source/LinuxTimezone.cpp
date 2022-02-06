@@ -72,7 +72,7 @@ namespace Jde
 
 	Duration Timezone::EasternTimezoneDifference( TimePoint utc, SL sl )noexcept(false)
 	{
-		return TryGetGmtOffset( "EST5EDT", utc );
+		return TryGetGmtOffset( "EST5EDT", utc, sl );
 	}
 
 	Duration Timezone::GetGmtOffset( sv name, TimePoint utc, SL sl )noexcept(false)
@@ -82,7 +82,7 @@ namespace Jde
 		if( !pInfo || !pInfo->size() )
 			Cache::Set<CacheType>( key, pInfo = LoadGmtOffset( name ) );
 		var pStartDuration = pInfo->lower_bound( utc );
-		THROW_IF( pStartDuration==pInfo->end(), "No info for '{}'", ToIsoString(utc) );
+		if( pStartDuration==pInfo->end() ) throw Jde::Exception{ sl, ELogLevel::Error, "No info for '{}'", ToIsoString(utc) };
 		const Duration value{ pStartDuration->second };
 		return value;
 	}

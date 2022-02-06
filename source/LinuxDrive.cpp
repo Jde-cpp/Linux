@@ -4,8 +4,6 @@
 #include "../../Framework/source/Cache.h"
 
 #define var const auto
-//Test,
-// ignore SigUsr1 on applicable threads
 namespace Jde::IO
 {
 	Drive::NativeDrive _native;
@@ -23,28 +21,16 @@ namespace Jde::IO
 				INFO( "Created dir {}", Path.parent_path() );
 				return Open();
 			}
-			THROW_IFX( IsRead /*|| errno!=EACCES*/, IOException(move(Path), errno, "open") );
-			//THROW_IFX( ::remove(Path.string().c_str())==-1, IOException(move(Path), errno, "remove") );
-			//Open();
-			//return;
+			THROW_IFX( IsRead /*|| errno!=EACCES*/, IOException(move(Path), errno, "open", _sl) );
 		}
 		if( IsRead )
 		{
 			struct stat st;
-			THROW_IFX( ::fstat( Handle, &st )==-1, IOException(move(Path), errno, "fstat") );
+			THROW_IFX( ::fstat( Handle, &st )==-1, IOException(move(Path), errno, "fstat", _sl) );
 			std::visit( [size=st.st_size](auto&& b){b->resize(size);}, Buffer );
 		}
 	}
 
-/*	α FileIOArg::CreateChunk( uint i )noexcept->up<IFileChunkArg>
-	{
-		return make_unique<LinuxChunk>( *this, i );
-	}
-	α FileIOArg::OSSend()noexcept->void
-	{
-		CoroutinePool::Resume( move(h) );
-	}
-*/
 	α FileIOArg::Send( coroutine_handle<Task::promise_type>&& h )noexcept->void
 	{
 		CoHandle = h;
