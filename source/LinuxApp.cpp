@@ -128,7 +128,7 @@ namespace Jde
 		exit( EXIT_FAILURE );
 	}
 
-	string OSApp::EnvironmentVariable( str variable )noexcept
+	string OSApp::EnvironmentVariable( str variable, SL sl )noexcept
 	{
 		char* pEnv = std::getenv( string{variable}.c_str() );
 		return pEnv ? string{pEnv} : string{};
