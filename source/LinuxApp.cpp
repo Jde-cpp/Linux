@@ -19,7 +19,8 @@ namespace Jde
 
 	α OSApp::LoadLibrary( path path )noexcept(false)->void*
 	{
-		auto p = ::dlopen( path.c_str(), RTLD_LAZY );  THROW_IFX( !p, IO_EX(path, "Can not load library - '{}'", dlerror()) );
+		auto p = ::dlopen( path.c_str(), RTLD_LAZY );
+		THROW_IFX( !p, IO_EX(path, ELogLevel::Error, "Can not load library - '{}'", dlerror()) );
 		INFO( "({})Opened"sv, path.string() );
 		return p;
 	}
@@ -58,8 +59,10 @@ namespace Jde
 			osLevel = LOG_CRIT;
 		syslog( osLevel, "%s",  value.c_str() );
 	}
-	α OSApp::CompanyName()noexcept->string{ return "Jde-Cpp"; }
-
+	const string _companyName{ "Jde-Cpp" }; string _productName{ "productName" };
+	α OSApp::CompanyName()noexcept->str{ return _companyName; }
+	//α OSApp::SetProductName( sv n )ι->str{ _productName=v; }
+	//α OSApp::ProductName()ι->str{ return _productName; }
 	α IApplication::MemorySize()noexcept->size_t//https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
 	{
 		uint size = 0;
@@ -88,7 +91,7 @@ namespace Jde
 
 	flat_set<string> OSApp::Startup( int argc, char** argv, sv appName, string serviceDescription )noexcept(false)
 	{
-		IApplication::_pInstance = make_shared<OSApp>();
+		IApplication::_pInstance = ms<OSApp>();
 		return IApplication::_pInstance->BaseStartup( argc, argv, appName, serviceDescription );
 	}
 	atomic<bool> _workerMutex{false};
@@ -128,13 +131,13 @@ namespace Jde
 		exit( EXIT_FAILURE );
 	}
 
-	string OSApp::EnvironmentVariable( str variable, SL sl )noexcept
+	α IApplication::EnvironmentVariable( str variable, SL sl )noexcept->string
 	{
 		char* pEnv = std::getenv( string{variable}.c_str() );
 		return pEnv ? string{pEnv} : string{};
 
 	}
-	α OSApp::ProgramDataFolder()noexcept->fs::path
+	α IApplication::ProgramDataFolder()noexcept->fs::path
 	{
 		return fs::path{ EnvironmentVariable("HOME") };
 	}
@@ -160,21 +163,30 @@ namespace Jde
 			LOG( "kill sent to:  '{}'.", processId );
 		return result==0;
 	}
-	up<flat_map<string,string>> _pArgs;
-	α OSApp::Args()noexcept->flat_map<string,string>
+	up<flat_multimap<string,string>> _pArgs;
+	α OSApp::Args()noexcept->const flat_multimap<string,string>&
 	{
 		if( !_pArgs )
 		{
-			_pArgs = make_unique<flat_map<string,string>>();
+			_pArgs = mu<flat_multimap<string,string>>();
 			std::ifstream file( "/proc/self/cmdline" );
-			auto p = _pArgs->try_emplace( {} );
+			//auto p = _pArgs->try_emplace( {} );
+			optional<string> key;
 			for( string current; std::getline<char>(file, current, '\0'); )
 			{
 				if( current.starts_with('-') )
-					p = _pArgs->try_emplace( current );
+				{
+					if( key )
+						_pArgs->emplace( *key, string{} );
+					key = current;
+				}
+				else if( key )
+					_pArgs->emplace( *key, current );
 				else
-					p.first->second = current;
+					_pArgs->emplace( string{}, current );
 			}
+			if( key )
+				_pArgs->emplace( *key, string{} );
 		}
 		return *_pArgs;
 	}

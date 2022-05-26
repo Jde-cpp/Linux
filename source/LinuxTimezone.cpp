@@ -33,7 +33,7 @@ namespace Jde
 		std::ifstream is{ path.string() };
 		tzhead head;
 		is.read(  (char*)&head, sizeof(tzhead) );
-		THROW_IFX( string(head.tzh_magic,4)!=string(Magic), IO_EX(path, "Magic not equal '{}'", string(head.tzh_magic,4)) );
+		THROW_IFX( string(head.tzh_magic,4)!=string(Magic), IO_EX(path, ELogLevel::Error, "Magic not equal '{}'", string(head.tzh_magic,4)) );
 		THROW_IFX( is.bad(), IOException(path,"after header is.bad()") );
 
 		var count = ntohl( head.tzh_timecnt );
@@ -64,7 +64,7 @@ namespace Jde
 		auto pResults = make_shared<CacheType>();
 		for( var [time,type] : timeTypes )
 		{
-			THROW_IFX( type>=typeOffsets.size(), IO_EX(path,"type>=typeOffsets.size() {}>={}", type, typeOffsets.size()) );
+			THROW_IFX( type>=typeOffsets.size(), IO_EX(path, ELogLevel::Error, "type>=typeOffsets.size() {}>={}", type, typeOffsets.size()) );
 			pResults->emplace( time, std::chrono::seconds(typeOffsets[type]) );
 		}
 		return pResults;

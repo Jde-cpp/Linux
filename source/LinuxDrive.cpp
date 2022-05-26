@@ -45,7 +45,7 @@ namespace Jde::IO
 		if( _cache && Cache::Has(_arg.Path) )
 		{
 			sp<void> pVoid = std::visit( [](auto&& x){return (sp<void>)x;}, _arg.Buffer );
-			return AwaitResult{ pVoid };
+			return AwaitResult{ move(pVoid) };
 		}
 		try
 		{
@@ -70,7 +70,7 @@ namespace Jde::IO
 			if( _cache )
 				Cache::Set( _arg.Path, pVoid );
 
-			return AwaitResult{ pVoid };
+			return AwaitResult{ move(pVoid) };
 		}
 		catch( IException& e )
 		{
