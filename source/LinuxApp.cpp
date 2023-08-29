@@ -60,7 +60,7 @@ namespace Jde
 		syslog( osLevel, "%s",  value.c_str() );
 	}
 	const string _companyName{ "Jde-Cpp" }; string _productName{ "productName" };
-	α OSApp::CompanyName()noexcept->str{ return _companyName; }
+	α OSApp::CompanyName()noexcept->string{ return _companyName; }
 	//α OSApp::SetProductName( sv n )ι->str{ _productName=v; }
 	//α OSApp::ProductName()ι->str{ return _productName; }
 	α IApplication::MemorySize()noexcept->size_t//https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
