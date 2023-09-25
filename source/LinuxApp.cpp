@@ -17,24 +17,24 @@ namespace Jde
 		::dlclose( p );
 	}
 
-	α OSApp::LoadLibrary( path path )noexcept(false)->void*
+	α OSApp::LoadLibrary( path path )ε->void*
 	{
 		auto p = ::dlopen( path.c_str(), RTLD_LAZY );
 		THROW_IFX( !p, IO_EX(path, ELogLevel::Error, "Can not load library - '{}'", dlerror()) );
 		INFO( "({})Opened"sv, path.string() );
 		return p;
 	}
-	α OSApp::GetProcAddress( void* pModule, str procName )noexcept(false)->void*
+	α OSApp::GetProcAddress( void* pModule, str procName )ε->void*
 	{
 		auto p = ::dlsym( pModule, procName.c_str() ); CHECK( p );
 		return p;
 	}
-	α OSApp::Install( str serviceDescription )noexcept(false)->void
+	α OSApp::Install( str serviceDescription )ε->void
 	{
 		THROW( "Not Implemeented" );
 	}
 	α OSApp::UnPause()noexcept->void{ ASSERT(false); }//not sure of use case
-	α OSApp::Uninstall()noexcept(false)->void
+	α OSApp::Uninstall()ε->void
 	{
 		THROW( "Not Implemeented");
 	}
@@ -89,7 +89,7 @@ namespace Jde
 
 	uint OSApp::ProcessId()noexcept{ return getpid(); }
 
-	flat_set<string> OSApp::Startup( int argc, char** argv, sv appName, string serviceDescription )noexcept(false)
+	flat_set<string> OSApp::Startup( int argc, char** argv, sv appName, string serviceDescription )ε
 	{
 		IApplication::_pInstance = ms<OSApp>();
 		return IApplication::_pInstance->BaseStartup( argc, argv, appName, serviceDescription );
@@ -192,7 +192,7 @@ namespace Jde
 	}
 	α OSApp::CompanyRootDir()noexcept->fs::path{ return path{ "."+OSApp::CompanyName() }; };
 
-	α OSApp::AddSignals()noexcept(false)->void/*noexcept(false) for windows*/
+	α OSApp::AddSignals()ε->void/*ε for windows*/
 	{
 /* 		struct sigaction sigIntHandler;//_XOPEN_SOURCE
 		memset( &sigIntHandler, 0, sizeof(sigIntHandler) );
