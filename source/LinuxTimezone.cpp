@@ -77,7 +77,7 @@ namespace Jde
 
 	Duration Timezone::GetGmtOffset( sv name, TimePoint utc, SL sl )noexcept(false)
 	{
-		var key = fmt::format( "GetGmtOffset-{}", name );
+		var key = Jde::format( "GetGmtOffset-{}", name );
 		auto pInfo = Cache::Emplace<CacheType>( key );
 		if( !pInfo || !pInfo->size() )
 			Cache::Set<CacheType>( key, pInfo = LoadGmtOffset( name ) );

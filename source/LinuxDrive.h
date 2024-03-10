@@ -35,15 +35,15 @@ namespace Jde::IO::Drive
 	struct NativeDrive final: public IDrive
 	{
 		//void Recursive2( path dir )noexcept(false);
-		flat_map<string,IDirEntryPtr> Recursive( path dir, SRCE )noexcept(false) override;
-		IDirEntryPtr Get( path path )noexcept(false) override;
-		IDirEntryPtr Save( path path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false) override;
-		IDirEntryPtr CreateFolder( path path, const IDirEntry& dirEntry )noexcept(false) override;
-		void Trash( path path )noexcept override;
+		flat_map<string,IDirEntryPtr> Recursive( const fs::path& dir, SRCE )noexcept(false) override;
+		IDirEntryPtr Get( const fs::path& path )noexcept(false) override;
+		IDirEntryPtr Save( const fs::path& path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false) override;
+		IDirEntryPtr CreateFolder( const fs::path& path, const IDirEntry& dirEntry )noexcept(false) override;
+		void Trash( const fs::path& path )noexcept override;
 		VectorPtr<char> Load( const IDirEntry& dirEntry )noexcept(false) override;
-		void Remove( path )noexcept(false) override;
+		void Remove( const fs::path& )noexcept(false) override;
 		void TrashDisposal( TimePoint /*latestDate*/ )noexcept(false)override{ THROW("Not Implemented"); };
 		void Restore( sv name )noexcept(false)override{ THROW("Not Implemented"); };
-		void SoftLink( path existingFile, path newSymLink )noexcept(false) override;
+		void SoftLink( const fs::path& existingFile, const fs::path& newSymLink )noexcept(false) override;
 	};
 }

@@ -4,12 +4,13 @@
 #include "../../Framework/source/Cache.h"
 
 #define var const auto
-namespace Jde::IO
-{
-	Drive::NativeDrive _native;
-	α Native()noexcept->IDrive&{ return _native; }
+namespace Jde::IO{
+	static const sp<Jde::LogTag> _logTag = Logging::Tag( "io" );
 
-	α FileIOArg::Open()noexcept(false)->void
+	Drive::NativeDrive _native;
+	α Native()ι->IDrive&{ return _native; }
+
+	α FileIOArg::Open()ι(false)->void
 	{
 		Handle = ::open( Path.string().c_str(), O_NONBLOCK | (IsRead ? O_RDONLY : O_WRONLY|O_CREAT|O_TRUNC), 0666 );
 		if( Handle==-1 )
@@ -18,7 +19,7 @@ namespace Jde::IO
 			if( !IsRead && errno==ENOENT )
 			{
 				fs::create_directories( Path.parent_path() );
-				INFO( "Created dir {}", Path.parent_path() );
+				INFO( "Created dir {}", Path.parent_path().string() );
 				return Open();
 			}
 			THROW_IFX( IsRead /*|| errno!=EACCES*/, IOException(move(Path), errno, "open", _sl) );
@@ -31,13 +32,13 @@ namespace Jde::IO
 		}
 	}
 
-	α FileIOArg::Send( coroutine_handle<Task::promise_type>&& h )noexcept->void
+	α FileIOArg::Send( coroutine_handle<Task::promise_type>&& h )ι->void
 	{
 		CoHandle = h;
 		CoroutinePool::Resume( move(CoHandle) );
 	}
 
-	α DriveAwaitable::await_resume()noexcept->AwaitResult
+	α DriveAwaitable::await_resume()ι->AwaitResult
 	{
 		base::AwaitResume();
 		if( ExceptionPtr )
@@ -80,13 +81,13 @@ namespace Jde::IO
 
 
 /*
-	α DriveAwaitable::await_suspend( typename base::THandle h )noexcept->void
+	α DriveAwaitable::await_suspend( typename base::THandle h )ι->void
 	{
 		base::await_suspend( h );
 		CoroutinePool::Resume( move(h) );
 	}
 */
-/*	HFile FileIOArg::SubsequentHandle()noexcept
+/*	HFile FileIOArg::SubsequentHandle()ι
 	{
 		auto h = Handle;
 		if( h )
@@ -99,12 +100,12 @@ namespace Jde::IO
 		return h;
 	}
 	*/
-/*	up<IFileChunkArg> FileIOArg::CreateChunk( uint startIndex, uint endIndex )noexcept
+/*	up<IFileChunkArg> FileIOArg::CreateChunk( uint startIndex, uint endIndex )ι
 	{
 		return make_unique<LinuxFileChunkArg>( *this, startIndex, endIndex );
 	}
 */
-/*	α LinuxDriveWorker::AioSigHandler( int sig, siginfo_t* pInfo, void* pContext )noexcept->void
+/*	α LinuxDriveWorker::AioSigHandler( int sig, siginfo_t* pInfo, void* pContext )ι->void
 	{
 		auto pChunkArg = (IFileChunkArg*)pInfo->si_value.sival_ptr;
 		auto& fileArg = pChunkArg->FileArg();
@@ -118,7 +119,7 @@ namespace Jde::IO
 		}
 	}
 */
-/*	LinuxFileChunkArg::LinuxFileChunkArg( FileIOArg& ioArg, uint start, uint length )noexcept:
+/*	LinuxFileChunkArg::LinuxFileChunkArg( FileIOArg& ioArg, uint start, uint length )ι:
 		IFileChunkArg{ ioArg }
 	{
 		//_linuxArg.aio_fildes = ioArg.FileHandle;
@@ -130,7 +131,7 @@ namespace Jde::IO
 		_linuxArg.aio_sigevent.sigev_signo = DriveWorker::Signal;
 		_linuxArg.aio_sigevent.sigev_value.sival_ptr = this;
 	}
-	α LinuxFileChunkArg::Process()noexcept->void
+	α LinuxFileChunkArg::Process()ι->void
 	{
 		DBG( "Sending chunk '{}' - handle='{}'"sv, index, handle );
 		_linuxArg.aio_fildes = handle;
@@ -155,7 +156,7 @@ namespace Jde::IO::Drive
 	}
 	struct DirEntry : IDirEntry
 	{
-		DirEntry( path path ):
+		DirEntry( const fs::path& path ):
 			DirEntry( fs::directory_entry(path) )
 		{
 			//LoadNativeDrive();//TODO Remove
@@ -173,12 +174,12 @@ namespace Jde::IO::Drive
 			AccessedTime = accessed;
 		}
 	};
-	α NativeDrive::Get( path path )noexcept(false)->IDirEntryPtr
+	α NativeDrive::Get( const fs::path& path )ε->IDirEntryPtr
 	{
 		sp<const IDirEntry> pEntry = make_shared<const DirEntry>( path );
 		return pEntry;
 	}
-	α NativeDrive::Recursive( path dir, SL sl )noexcept(false)->flat_map<string,IDirEntryPtr>
+	α NativeDrive::Recursive( const fs::path& dir, SL sl )ε->flat_map<string,IDirEntryPtr>
 	{
 		CHECK_PATH( dir, sl );
 		var dirString = dir.string();
@@ -209,7 +210,7 @@ namespace Jde::IO::Drive
 
 		return { Clock::to_time_t(time), total };
 	}
-	α NativeDrive::CreateFolder( path dir, const IDirEntry& dirEntry )noexcept(false)->IDirEntryPtr
+	α NativeDrive::CreateFolder( const fs::path& dir, const IDirEntry& dirEntry )ε->IDirEntryPtr
 	{
 		fs::create_directory( dir );
 		if( dirEntry.ModifiedTime.time_since_epoch()!=Duration::zero() )
@@ -223,7 +224,7 @@ namespace Jde::IO::Drive
 		}
 		return make_shared<DirEntry>( dir );
 	}
-	α NativeDrive::Save( path path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false)->IDirEntryPtr
+	α NativeDrive::Save( const fs::path& path, const vector<char>& bytes, const IDirEntry& dirEntry )ε->IDirEntryPtr
 	{
 		IO::FileUtilities::SaveBinary( path, bytes );
 		if( dirEntry.ModifiedTime.time_since_epoch()!=Duration::zero() )
@@ -237,37 +238,37 @@ namespace Jde::IO::Drive
 		return make_shared<DirEntry>( path );
 	}
 
-	//VectorPtr<char> NativeDrive::Load( path path )noexcept(false)
-	α NativeDrive::Load( const IDirEntry& dirEntry )noexcept(false)->VectorPtr<char>//fs::filesystem_error, IOException
+	//VectorPtr<char> NativeDrive::Load( path path )ε
+	α NativeDrive::Load( const IDirEntry& dirEntry )ε->VectorPtr<char>//fs::filesystem_error, IOException
 	{
 		return IO::FileUtilities::LoadBinary( dirEntry.Path );
 	}
 
-	α NativeDrive::Remove( path path )noexcept(false)->void
+	α NativeDrive::Remove( const fs::path& path )ε->void
 	{
 		DBG( "Removing '{}'."sv, path.string() );
 		fs::remove( path );
 	}
-	α NativeDrive::Trash( path path )noexcept->void
+	α NativeDrive::Trash( const fs::path& path )ι->void
 	{
 		DBG( "Trashing '{}'."sv, path.string() );
 
-		var result = system( fmt::format("gio trash {}", path.string()).c_str() );
+		var result = system( Jde::format("gio trash {}", path.string()).c_str() );
 		DBG( "Trashing '{}' returned '{}'."sv, path.string(), result );
 	}
-	α NativeDrive::SoftLink( path existingFile, path newSymLink )noexcept(false)->void
+	α NativeDrive::SoftLink( const fs::path& existingFile, const fs::path& newSymLink )ε->void
 	{
 		var result = ::symlink( existingFile.string().c_str(), newSymLink.string().c_str() );
 		THROW_IF( result!=0, "symlink creating '{}' referencing '{}' failed ({}){}.", newSymLink.string(), existingFile.string(), result, errno );
 		DBG( "Created symlink '{}' referencing '{}'."sv, newSymLink.string(), existingFile.string() );
 	}
 
-/*	bool DriveWorker::Poll()noexcept
+/*	bool DriveWorker::Poll()ι
 	{
 		return base::Poll() || Args.size();//handle new queue item, from co_await Read() || currently handling item
 	}
 */
-	// α DriveWorker::HandleRequest( FileIOArg&& arg )noexcept->void
+	// α DriveWorker::HandleRequest( FileIOArg&& arg )ι->void
 	// {
 	// 	auto pArg = &Args.emplace_back( move(arg) );
 	// 	var size = std::visit( [](auto&& x){return x->size();}, pArg->Buffer );
@@ -281,7 +282,7 @@ namespace Jde::IO::Drive
 	// 			pArg->OverlapsOverflow.emplace_back( move(pChunkArg) );
 	// 	}
 	// }
-/*	α FileIOArg::Send( up<IFileChunkArg> pChunkArg )noexcept->void
+/*	α FileIOArg::Send( up<IFileChunkArg> pChunkArg )ι->void
 	{
 		if( pChunkArg->Process() )
 			Overlaps.emplace_back( move(pChunkArg) );

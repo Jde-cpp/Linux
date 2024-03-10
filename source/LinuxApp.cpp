@@ -10,14 +10,14 @@
 #define var const auto
 namespace Jde
 {
-	static const LogTag& _logLevel = Logging::TagLevel( "status" );
+	static const sp<LogTag> _logTag = Logging::Tag( "status" );
 
-	α OSApp::FreeLibrary( void* p )noexcept->void
+	α OSApp::FreeLibrary( void* p )ι->void
 	{
 		::dlclose( p );
 	}
 
-	α OSApp::LoadLibrary( path path )ε->void*
+	α OSApp::LoadLibrary( const fs::path& path )ε->void*
 	{
 		auto p = ::dlopen( path.c_str(), RTLD_LAZY );
 		THROW_IFX( !p, IO_EX(path, ELogLevel::Error, "Can not load library - '{}'", dlerror()) );
@@ -33,18 +33,18 @@ namespace Jde
 	{
 		THROW( "Not Implemeented" );
 	}
-	α OSApp::UnPause()noexcept->void{ ASSERT(false); }//not sure of use case
+	α OSApp::UnPause()ι->void{ ASSERT(false); }//not sure of use case
 	α OSApp::Uninstall()ε->void
 	{
 		THROW( "Not Implemeented");
 	}
 
-	α OSApp::Executable()noexcept->fs::path
+	α OSApp::Executable()ι->fs::path
 	{
 		return fs::path{ program_invocation_name };
 	}
 
-	α IApplication::AddApplicationLog( ELogLevel level, str value )noexcept->void //called onterminate, needs to be static.
+	α IApplication::AddApplicationLog( ELogLevel level, str value )ι->void //called onterminate, needs to be static.
 	{
 		auto osLevel = LOG_DEBUG;
 		if( level==ELogLevel::Debug )
@@ -60,10 +60,10 @@ namespace Jde
 		syslog( osLevel, "%s",  value.c_str() );
 	}
 	const string _companyName{ "Jde-Cpp" }; string _productName{ "productName" };
-	α OSApp::CompanyName()noexcept->string{ return _companyName; }
+	α OSApp::CompanyName()ι->string{ return _companyName; }
 	//α OSApp::SetProductName( sv n )ι->str{ _productName=v; }
 	//α OSApp::ProductName()ι->str{ return _productName; }
-	α IApplication::MemorySize()noexcept->size_t//https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
+	α IApplication::MemorySize()ι->size_t//https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
 	{
 		uint size = 0;
 		FILE* fp = fopen( "/proc/self/statm", "r" );
@@ -77,9 +77,9 @@ namespace Jde
 		return size;
 	}
 
-	α IApplication::ExePath()noexcept->fs::path{ return fs::canonical( "/proc/self/exe" ); }
+	α IApplication::ExePath()ι->fs::path{ return fs::canonical( "/proc/self/exe" ); }
 
-	string IApplication::HostName()noexcept
+	string IApplication::HostName()ι
 	{
 		constexpr uint maxHostName = HOST_NAME_MAX;
 		char hostname[maxHostName];
@@ -87,7 +87,7 @@ namespace Jde
 		return hostname;
 	}
 
-	uint OSApp::ProcessId()noexcept{ return getpid(); }
+	uint OSApp::ProcessId()ι{ return getpid(); }
 
 	flat_set<string> OSApp::Startup( int argc, char** argv, sv appName, string serviceDescription )ε
 	{
@@ -97,7 +97,7 @@ namespace Jde
 	atomic<bool> _workerMutex{false};
 	vector<sp<Threading::IWorker>> _workers;
 
-	α OSApp::Pause()noexcept->void
+	α OSApp::Pause()ι->void
 	{
 //		LOG( "Pausing main thread. {}", getpid() );
 		::pause();
@@ -112,12 +112,12 @@ namespace Jde
 		//IApplication::Wait();
 	}
 
-	bool OSApp::AsService()noexcept
+	bool OSApp::AsService()ι
 	{
 		return ::daemon( 1, 0 )==0;
 	}
 
-	α IApplication::OnTerminate()noexcept->void
+	α IApplication::OnTerminate()ι->void
 	{
 		void *trace_elems[20];
 		auto trace_elem_count( backtrace(trace_elems, 20) );
@@ -131,13 +131,13 @@ namespace Jde
 		exit( EXIT_FAILURE );
 	}
 
-	α IApplication::EnvironmentVariable( str variable, SL sl )noexcept->string
+	α IApplication::EnvironmentVariable( str variable, SL sl )ι->string
 	{
 		char* pEnv = std::getenv( string{variable}.c_str() );
 		return pEnv ? string{pEnv} : string{};
 
 	}
-	α IApplication::ProgramDataFolder()noexcept->fs::path
+	α IApplication::ProgramDataFolder()ι->fs::path
 	{
 		return fs::path{ EnvironmentVariable("HOME") };
 	}
@@ -154,17 +154,17 @@ namespace Jde
 		//exit( 1 );
 	}
 
-	α OSApp::KillInstance( uint processId )noexcept->bool
+	α OSApp::KillInstance( uint processId )ι->bool
 	{
 		var result = ::kill( processId, 14 );
 		if( result )
 			ERR( "kill failed with '{}'.", result );
 		else
-			LOG( "kill sent to:  '{}'.", processId );
+			LOG( ELogLevel::Information, _logTag, "kill sent to:  '{}'.", processId );
 		return result==0;
 	}
 	up<flat_multimap<string,string>> _pArgs;
-	α OSApp::Args()noexcept->const flat_multimap<string,string>&
+	α OSApp::Args()ι->const flat_multimap<string,string>&
 	{
 		if( !_pArgs )
 		{
@@ -190,7 +190,7 @@ namespace Jde
 		}
 		return *_pArgs;
 	}
-	α OSApp::CompanyRootDir()noexcept->fs::path{ return path{ "."+OSApp::CompanyName() }; };
+	α OSApp::CompanyRootDir()ι->fs::path{ return fs::path{ "."+OSApp::CompanyName() }; };
 
 	α OSApp::AddSignals()ε->void/*ε for windows*/
 	{
@@ -217,7 +217,7 @@ namespace Jde
 		//sigaction( SIGTERM, &sigIntHandler, nullptr );
 	}
 
-	α OSApp::SetConsoleTitle( sv title )noexcept->void
+	α OSApp::SetConsoleTitle( sv title )ι->void
 	{
 		std::cout << "\033]0;" << title << "\007";
 	}

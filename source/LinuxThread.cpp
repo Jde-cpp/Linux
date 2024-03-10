@@ -23,7 +23,7 @@ namespace Jde
 
 	void Threading::SetThreadDscrptn( sv description )noexcept
 	{
-		strncpy( ThreadName, str{description}.c_str(), NameLength );
+		strncpy( ThreadName, str{description}.c_str(), NameLength-1 );
 		prctl( PR_SET_NAME, ThreadName, 0, 0, 0 );
 		ThreadId = pthread_self();
 	}
