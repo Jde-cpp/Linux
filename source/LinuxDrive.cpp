@@ -42,7 +42,7 @@ namespace Jde::IO{
 	{
 		base::AwaitResume();
 		if( ExceptionPtr )
-			return AwaitResult{ ExceptionPtr };
+			return AwaitResult{ move(ExceptionPtr) };
 		if( _cache && Cache::Has(_arg.Path) )
 		{
 			sp<void> pVoid = std::visit( [](auto&& x){return (sp<void>)x;}, _arg.Buffer );
@@ -73,9 +73,8 @@ namespace Jde::IO{
 
 			return AwaitResult{ move(pVoid) };
 		}
-		catch( IException& e )
-		{
-			return AwaitResult{ e.Clone() };
+		catch( IException& e ){
+			return AwaitResult{ e.Move() };
 		}
 	}
 
@@ -239,8 +238,7 @@ namespace Jde::IO::Drive
 	}
 
 	//VectorPtr<char> NativeDrive::Load( path path )ε
-	α NativeDrive::Load( const IDirEntry& dirEntry )ε->VectorPtr<char>//fs::filesystem_error, IOException
-	{
+	α NativeDrive::Load( const IDirEntry& dirEntry )ε->sp<vector<char>>{//fs::filesystem_error, IOException
 		return IO::FileUtilities::LoadBinary( dirEntry.Path );
 	}
 

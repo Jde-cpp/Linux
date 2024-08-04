@@ -8,44 +8,35 @@
 #include "../../Framework/source/threading/InterruptibleThread.h"
 
 #define var const auto
-namespace Jde
-{
-	static const sp<LogTag> _logTag = Logging::Tag( "status" );
-
-	α OSApp::FreeLibrary( void* p )ι->void
-	{
+namespace Jde{
+	auto _tag{ ELogTags::App };
+	α OSApp::FreeLibrary( void* p )ι->void{
 		::dlclose( p );
 	}
 
-	α OSApp::LoadLibrary( const fs::path& path )ε->void*
-	{
+	α OSApp::LoadLibrary( const fs::path& path )ε->void*{
 		auto p = ::dlopen( path.c_str(), RTLD_LAZY );
 		THROW_IFX( !p, IO_EX(path, ELogLevel::Error, "Can not load library - '{}'", dlerror()) );
-		INFO( "({})Opened"sv, path.string() );
+		Information( _tag, "[{}] Opened"sv, path.string() );
 		return p;
 	}
-	α OSApp::GetProcAddress( void* pModule, str procName )ε->void*
-	{
+	α OSApp::GetProcAddress( void* pModule, str procName )ε->void*{
 		auto p = ::dlsym( pModule, procName.c_str() ); CHECK( p );
 		return p;
 	}
-	α OSApp::Install( str serviceDescription )ε->void
-	{
+	α OSApp::Install( str serviceDescription )ε->void{
 		THROW( "Not Implemeented" );
 	}
 	α OSApp::UnPause()ι->void{ ASSERT(false); }//not sure of use case
-	α OSApp::Uninstall()ε->void
-	{
+	α OSApp::Uninstall()ε->void{
 		THROW( "Not Implemeented");
 	}
 
-	α OSApp::Executable()ι->fs::path
-	{
+	α OSApp::Executable()ι->fs::path{
 		return fs::path{ program_invocation_name };
 	}
 
-	α IApplication::AddApplicationLog( ELogLevel level, str value )ι->void //called onterminate, needs to be static.
-	{
+	α IApplication::AddApplicationLog( ELogLevel level, str value )ι->void{ //called onterminate, needs to be static.
 		auto osLevel = LOG_DEBUG;
 		if( level==ELogLevel::Debug )
 			osLevel = LOG_INFO;
@@ -62,13 +53,12 @@ namespace Jde
 	const string _companyName{ "Jde-Cpp" }; string _productName{ "productName" };
 	α OSApp::CompanyName()ι->string{ return _companyName; }
 	//α OSApp::SetProductName( sv n )ι->str{ _productName=v; }
-	//α OSApp::ProductName()ι->str{ return _productName; }
-	α IApplication::MemorySize()ι->size_t//https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
-	{
+	α OSApp::ProductName()ι->sv{ return _productName; }
+	α OSApp::SetProductName( sv productName )ι->void{ _productName = productName; }
+	α IApplication::MemorySize()ι->size_t{//https://stackoverflow.com/questions/669438/how-to-get-memory-usage-at-runtime-using-c
 		uint size = 0;
 		FILE* fp = fopen( "/proc/self/statm", "r" );
-		if( fp!=nullptr )
-		{
+		if( fp!=nullptr ){
 			long rss = 0L;
 			if( fscanf( fp, "%*s%ld", &rss ) == 1 )
 				size = (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
@@ -79,8 +69,7 @@ namespace Jde
 
 	α IApplication::ExePath()ι->fs::path{ return fs::canonical( "/proc/self/exe" ); }
 
-	string IApplication::HostName()ι
-	{
+	string IApplication::HostName()ι{
 		constexpr uint maxHostName = HOST_NAME_MAX;
 		char hostname[maxHostName];
 		::gethostname( hostname, maxHostName );
@@ -89,16 +78,15 @@ namespace Jde
 
 	uint OSApp::ProcessId()ι{ return getpid(); }
 
-	flat_set<string> OSApp::Startup( int argc, char** argv, sv appName, string serviceDescription )ε
-	{
-		IApplication::_pInstance = ms<OSApp>();
-		return IApplication::_pInstance->BaseStartup( argc, argv, appName, serviceDescription );
+	α OSApp::Startup( int argc, char** argv, sv appName, string serviceDescription )ε->flat_set<string>{
+		auto pInstance = ms<OSApp>();
+		IApplication::SetInstance( pInstance );
+		return pInstance->BaseStartup( argc, argv, appName, serviceDescription );
 	}
 	atomic<bool> _workerMutex{false};
 	vector<sp<Threading::IWorker>> _workers;
 
-	α OSApp::Pause()ι->void
-	{
+	α OSApp::Pause()ι->void{
 //		LOG( "Pausing main thread. {}", getpid() );
 		::pause();
 /*		for( ;; )
@@ -112,13 +100,11 @@ namespace Jde
 		//IApplication::Wait();
 	}
 
-	bool OSApp::AsService()ι
-	{
+	bool OSApp::AsService()ι{
 		return ::daemon( 1, 0 )==0;
 	}
 
-	α IApplication::OnTerminate()ι->void
-	{
+	α IApplication::OnTerminate()ι->void{
 		void *trace_elems[20];
 		auto trace_elem_count( backtrace(trace_elems, 20) );
 		char **stack_syms( backtrace_symbols(trace_elems, trace_elem_count) );
@@ -131,20 +117,19 @@ namespace Jde
 		exit( EXIT_FAILURE );
 	}
 
-	α IApplication::EnvironmentVariable( str variable, SL sl )ι->string
-	{
+	α IApplication::EnvironmentVariable( str variable, SL sl )ι->string{
 		char* pEnv = std::getenv( string{variable}.c_str() );
 		return pEnv ? string{pEnv} : string{};
-
 	}
-	α IApplication::ProgramDataFolder()ι->fs::path
-	{
+
+	α IApplication::ProgramDataFolder()ι->fs::path{
 		return fs::path{ EnvironmentVariable("HOME") };
 	}
 
-	α OSApp::ExitHandler( int s )->void
-	{
-		Exit( s );
+	α OSApp::ExitHandler( int s )->void{
+		if( !Process::ExitReason() )
+			Process::SetExitReason( s, s==SIGTERM );
+		//Handled in main.cpp
 		//ASSERT( false ); //TODO handle
 	//	signal( s, SIG_IGN );
 	//not supposed to log here...
@@ -154,28 +139,23 @@ namespace Jde
 		//exit( 1 );
 	}
 
-	α OSApp::KillInstance( uint processId )ι->bool
-	{
+	α OSApp::KillInstance( uint processId )ι->bool{
 		var result = ::kill( processId, 14 );
 		if( result )
-			ERR( "kill failed with '{}'.", result );
+			Error{ _tag, "kill failed with '{}'.", result };
 		else
-			LOG( ELogLevel::Information, _logTag, "kill sent to:  '{}'.", processId );
+			Information{ _tag, "kill sent to:  '{}'.", processId };
 		return result==0;
 	}
+
 	up<flat_multimap<string,string>> _pArgs;
-	α OSApp::Args()ι->const flat_multimap<string,string>&
-	{
-		if( !_pArgs )
-		{
+	α OSApp::Args()ι->const flat_multimap<string,string>&{
+		if( !_pArgs ){
 			_pArgs = mu<flat_multimap<string,string>>();
 			std::ifstream file( "/proc/self/cmdline" );
-			//auto p = _pArgs->try_emplace( {} );
 			optional<string> key;
-			for( string current; std::getline<char>(file, current, '\0'); )
-			{
-				if( current.starts_with('-') )
-				{
+			for( string current; std::getline<char>(file, current, '\0'); ){
+				if( current.starts_with('-') ){
 					if( key )
 						_pArgs->emplace( *key, string{} );
 					key = current;
@@ -192,8 +172,7 @@ namespace Jde
 	}
 	α OSApp::CompanyRootDir()ι->fs::path{ return fs::path{ "."+OSApp::CompanyName() }; };
 
-	α OSApp::AddSignals()ε->void/*ε for windows*/
-	{
+	α OSApp::AddSignals()ε->void{/*ε for windows*/
 /* 		struct sigaction sigIntHandler;//_XOPEN_SOURCE
 		memset( &sigIntHandler, 0, sizeof(sigIntHandler) );
 		sigIntHandler.sa_handler = ExitHandler;
@@ -217,8 +196,7 @@ namespace Jde
 		//sigaction( SIGTERM, &sigIntHandler, nullptr );
 	}
 
-	α OSApp::SetConsoleTitle( sv title )ι->void
-	{
+	α OSApp::SetConsoleTitle( sv title )ι->void{
 		std::cout << "\033]0;" << title << "\007";
 	}
 }

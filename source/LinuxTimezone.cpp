@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 #include "../../Framework/source/Cache.h"
 #include "../../Framework/source/DateTime.h"
-#include <jde/Log.h>
+#include <jde/log/Log.h>
 #include <fstream>
 
 #define var const auto

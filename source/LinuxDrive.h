@@ -11,39 +11,40 @@ namespace Jde::IO
 {
 	struct LinuxChunk final : IFileChunkArg
 	{
-		LinuxChunk( FileIOArg& pIOArg, uint index )noexcept;
-		//uint StartIndex()const noexcept override;
-		//void SetStartIndex( uint i )noexcept override;
-		//uint Bytes()const noexcept override{ return _linuxArg.aio_nbytes; } virtual void SetBytes( uint x )noexcept override{ _linuxArg.aio_nbytes=x; }
-		//void SetEndIndex( uint i )noexcept override;
-		//void SetFileIOArg( FileIOArg* p )noexcept override{ _fileIOArgPtr=p; }
-		//HFile Handle()noexcept override{ return _linuxArg.aio_fildes; };
-		//void Process( int handle )noexcept override;
-		//optional<bool> Complete()noexcept;
+		LinuxChunk( FileIOArg& pIOArg, uint index )ι;
+		//uint StartIndex()const ι override;
+		//void SetStartIndex( uint i )ι override;
+		//uint Bytes()const ι override{ return _linuxArg.aio_nbytes; } virtual void SetBytes( uint x )ι override{ _linuxArg.aio_nbytes=x; }
+		//void SetEndIndex( uint i )ι override;
+		//void SetFileIOArg( FileIOArg* p )ι override{ _fileIOArgPtr=p; }
+		//HFile Handle()ι override{ return _linuxArg.aio_fildes; };
+		//void Process( int handle )ι override;
+		//optional<bool> Complete()ι;
 	private:
 		//aiocb _linuxArg;
 	};
 
 /*	struct LinuxDriveWorker final : DriveWorker
 	{
-		//static void IOHandler( int s )noexcept;
-	//	static void AioSigHandler( int sig, siginfo_t* pInfo, void* pContext )noexcept;
+		//static void IOHandler( int s )ι;
+	//	static void AioSigHandler( int sig, siginfo_t* pInfo, void* pContext )ι;
 	};*/
 }
 namespace Jde::IO::Drive
 {
 	struct NativeDrive final: public IDrive
 	{
-		//void Recursive2( path dir )noexcept(false);
-		flat_map<string,IDirEntryPtr> Recursive( const fs::path& dir, SRCE )noexcept(false) override;
-		IDirEntryPtr Get( const fs::path& path )noexcept(false) override;
-		IDirEntryPtr Save( const fs::path& path, const vector<char>& bytes, const IDirEntry& dirEntry )noexcept(false) override;
-		IDirEntryPtr CreateFolder( const fs::path& path, const IDirEntry& dirEntry )noexcept(false) override;
-		void Trash( const fs::path& path )noexcept override;
-		VectorPtr<char> Load( const IDirEntry& dirEntry )noexcept(false) override;
-		void Remove( const fs::path& )noexcept(false) override;
-		void TrashDisposal( TimePoint /*latestDate*/ )noexcept(false)override{ THROW("Not Implemented"); };
-		void Restore( sv name )noexcept(false)override{ THROW("Not Implemented"); };
-		void SoftLink( const fs::path& existingFile, const fs::path& newSymLink )noexcept(false) override;
+		//void Recursive2( path dir )ε;
+		flat_map<string,IDirEntryPtr> Recursive( const fs::path& dir, SRCE )ε override;
+		IDirEntryPtr Get( const fs::path& path )ε override;
+		IDirEntryPtr Save( const fs::path& path, const vector<char>& bytes, const IDirEntry& dirEntry )ε override;
+		IDirEntryPtr CreateFolder( const fs::path& path, const IDirEntry& dirEntry )ε override;
+
+		α Trash( const fs::path& path )ι->void override;
+		α Load( const IDirEntry& dirEntry )ε->sp<vector<char>> override;
+		α Remove( const fs::path& )ε->void override;
+		α TrashDisposal( TimePoint /*latestDate*/ )ε->void override{ THROW("Not Implemented"); };
+		α Restore( sv name )ε->void override{ THROW("Not Implemented"); };
+		α SoftLink( const fs::path& existingFile, const fs::path& newSymLink )ε->void override;
 	};
 }
