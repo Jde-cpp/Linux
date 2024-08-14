@@ -10,7 +10,7 @@ namespace Jde::IO{
 	Drive::NativeDrive _native;
 	α Native()ι->IDrive&{ return _native; }
 
-	α FileIOArg::Open()ι(false)->void
+	α FileIOArg::Open()ε->void
 	{
 		Handle = ::open( Path.string().c_str(), O_NONBLOCK | (IsRead ? O_RDONLY : O_WRONLY|O_CREAT|O_TRUNC), 0666 );
 		if( Handle==-1 )
